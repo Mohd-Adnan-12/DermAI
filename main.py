@@ -807,6 +807,20 @@ def init_db():
                 cur.execute("ALTER TABLE cases ADD COLUMN IF NOT EXISTS reviewed_by INTEGER REFERENCES users(user_id);")
                 cur.execute("ALTER TABLE cases ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMP;")
                 cur.execute("ALTER TABLE predictions ADD COLUMN IF NOT EXISTS risk_level VARCHAR(50);")
+
+                # Auto-seed default administrator account on fresh cloud database if no admin exists
+                cur.execute("SELECT user_id FROM users WHERE role = 'admin' LIMIT 1")
+                if not cur.fetchone():
+                    admin_email = os.environ.get("ADMIN_EMAIL", "admin@dermai.com").strip().lower()
+                    admin_pass = os.environ.get("ADMIN_PASSWORD", "Admin@123")
+                    admin_hash = password_hash.hash(admin_pass)
+                    cur.execute("""
+                        INSERT INTO users (name, email, password_hash, role, is_approved)
+                        VALUES (%s, %s, %s, 'admin', TRUE)
+                        ON CONFLICT (email) DO UPDATE SET role = 'admin', is_approved = TRUE
+                    """, ("DermAI Administrator", admin_email, admin_hash))
+                    print(f"Default administrator account initialized ({admin_email} / {admin_pass}).")
+
                 conn.commit()
                 print("DermAI PostgreSQL schema verified and ready.")
     except Exception as exc:
