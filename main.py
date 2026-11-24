@@ -352,6 +352,9 @@ def build_report_email_html(patient_name: str, case_id: int, prediction: dict, a
           <!-- Header -->
           <tr>
             <td style="background: linear-gradient(135deg, #0b554d 0%, #148074 100%); padding: 28px 24px; text-align: left; color: #ffffff;">
+              <div style="margin-bottom: 14px;">
+                <img src="https://raw.githubusercontent.com/Mohd-Adnan-12/DermAI/main/frontend/public/dermai-logo-white.png" alt="DermAI Platform" width="180" style="display: block; max-width: 180px; height: auto;" />
+              </div>
               <div style="display: inline-block; background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.25); border-radius: 9999px; padding: 4px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
                 Automated Clinical Notification
               </div>
@@ -490,7 +493,10 @@ def build_clinician_review_email_html(patient_name: str, case_id: int, clinician
 <html>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; padding: 24px;">
   <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 28px;">
-    <h2 style="color: #0b554d; margin-top: 0;">🩺 Clinician Case Review Completed</h2>
+    <div style="margin-bottom: 18px;">
+      <img src="https://raw.githubusercontent.com/Mohd-Adnan-12/DermAI/main/frontend/public/dermai-logo.png" alt="DermAI Platform" width="180" style="display: block; max-width: 180px; height: auto;" />
+    </div>
+    <h2 style="color: #0b554d; margin-top: 0; font-size: 20px;">🩺 Clinician Case Review Completed</h2>
     <p>Dear <strong>{patient_name}</strong>,</p>
     <p>Your case <strong>#{case_id}</strong> has been reviewed by a licensed clinician on the DermAI platform.</p>
     
@@ -520,12 +526,8 @@ def send_password_reset_otp_email(recipient_email: str, recipient_name: str, otp
 <html>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px;">
   <div style="max-width: 540px; margin: 0 auto; background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
-    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
-      <div style="background: linear-gradient(135deg, #0d9488, #0284c7); color: #fff; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px;">D</div>
-      <div>
-        <h2 style="margin: 0; font-size: 20px; color: #0f172a;">DermAI Platform</h2>
-        <span style="font-size: 12px; color: #0d9488; font-weight: 600;">Account Security Verification</span>
-      </div>
+    <div style="margin-bottom: 22px;">
+      <img src="https://raw.githubusercontent.com/Mohd-Adnan-12/DermAI/main/frontend/public/dermai-logo.png" alt="DermAI Platform" width="190" style="display: block; max-width: 190px; height: auto;" />
     </div>
     
     <p style="font-size: 15px; color: #334155; line-height: 1.6;">Hello <strong>{recipient_name or 'there'}</strong>,</p>
@@ -595,12 +597,8 @@ def send_password_reset_email(recipient_email: str, recipient_name: str, reset_u
 <html>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px;">
   <div style="max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
-      <div style="background: linear-gradient(135deg, #0d9488, #0284c7); color: #fff; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px;">D</div>
-      <div>
-        <h2 style="margin: 0; font-size: 20px; color: #0f172a;">DermAI Platform</h2>
-        <span style="font-size: 12px; color: #0d9488; font-weight: 600;">Secure Password Reset</span>
-      </div>
+    <div style="margin-bottom: 22px;">
+      <img src="https://raw.githubusercontent.com/Mohd-Adnan-12/DermAI/main/frontend/public/dermai-logo.png" alt="DermAI Platform" width="190" style="display: block; max-width: 190px; height: auto;" />
     </div>
     
     <p style="font-size: 15px; color: #334155; line-height: 1.6;">Hello <strong>{recipient_name or 'there'}</strong>,</p>
