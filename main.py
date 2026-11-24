@@ -509,6 +509,82 @@ def build_clinician_review_email_html(patient_name: str, case_id: int, clinician
 </html>"""
 
 
+
+def send_password_reset_otp_email(recipient_email: str, recipient_name: str, otp: str) -> bool:
+    """Send 6-digit password reset OTP to user via HTTPS API (Brevo/Resend) or SMTP."""
+    if not recipient_email or "@" not in recipient_email:
+        return False
+
+    subject = f"🔐 DermAI Security: Your Password Reset Verification Code is {otp}"
+    html_content = f"""<!DOCTYPE html>
+<html>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px;">
+  <div style="max-width: 540px; margin: 0 auto; background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+      <div style="background: linear-gradient(135deg, #0d9488, #0284c7); color: #fff; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px;">D</div>
+      <div>
+        <h2 style="margin: 0; font-size: 20px; color: #0f172a;">DermAI Platform</h2>
+        <span style="font-size: 12px; color: #0d9488; font-weight: 600;">Account Security Verification</span>
+      </div>
+    </div>
+    
+    <p style="font-size: 15px; color: #334155; line-height: 1.6;">Hello <strong>{recipient_name or 'there'}</strong>,</p>
+    <p style="font-size: 15px; color: #334155; line-height: 1.6;">We received a request to reset your password. Use the verification code below to complete the reset. This OTP is valid for <strong>10 minutes</strong>:</p>
+    
+    <div style="text-align: center; margin: 28px 0; background: #f0fdfa; border: 1.5px dashed #0d9488; border-radius: 12px; padding: 20px;">
+      <span style="font-family: 'JetBrains Mono', Courier, monospace; font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #0f766e;">{otp}</span>
+    </div>
+
+    <p style="font-size: 13px; color: #64748b; line-height: 1.5;">For security reasons, never share this code with anyone. DermAI clinical staff will never ask for your verification code.</p>
+    <p style="font-size: 13px; color: #64748b; line-height: 1.5;">If you did not request this code, you can safely ignore this email; your account credentials remain unchanged.</p>
+    <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
+    <p style="font-size: 11px; color: #94a3b8; text-align: center;">DermAI Clinical Diagnostics &middot; Confidential Security Dispatch</p>
+  </div>
+</body>
+</html>"""
+
+    text_content = f"Hello {recipient_name},\n\nYour DermAI password reset verification code is: {otp}\n\nThis OTP is valid for 10 minutes.\nDo not share this code with anyone."
+
+    print(f"\n=======================================================")
+    print(f"🔐 [PASSWORD RESET OTP DISPATCHED]")
+    print(f"To:   {recipient_email}")
+    print(f"OTP:  {otp} (Valid 10 minutes)")
+    print(f"=======================================================\n")
+
+    if BREVO_API_KEY or RESEND_API_KEY:
+        try:
+            if send_via_https_api(recipient_email, recipient_name or "DermAI User", subject, html_content, text_content):
+                return True
+        except Exception as e:
+            print(f"[OTP EMAIL HTTPS WARNING] {e}")
+
+    if SMTP_HOST:
+        try:
+            import smtplib
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.text import MIMEText
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = subject
+            msg["From"] = f"DermAI Security <{SMTP_FROM_EMAIL}>"
+            msg["To"] = recipient_email
+            msg.attach(MIMEText(text_content, "plain"))
+            msg.attach(MIMEText(html_content, "html"))
+            if SMTP_PORT == 465:
+                server = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10)
+            else:
+                server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10)
+                if SMTP_USE_TLS:
+                    server.starttls()
+            if SMTP_USER and SMTP_PASSWORD:
+                server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(SMTP_FROM_EMAIL, [recipient_email], msg.as_string())
+            server.quit()
+            return True
+        except Exception as err:
+            print(f"[OTP EMAIL SMTP WARNING] {err}")
+
+    return True
+
 def send_password_reset_email(recipient_email: str, recipient_name: str, reset_url: str) -> bool:
     """Send secure password reset link to user via HTTPS API (Brevo/Resend) or SMTP."""
     if not recipient_email or "@" not in recipient_email:
@@ -967,6 +1043,22 @@ def init_db():
                     );
                 """)
                 cur.execute("CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token_hash);")
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS password_otps (
+                        otp_id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+                        email VARCHAR(150) NOT NULL,
+                        otp_hash VARCHAR(128) NOT NULL,
+                        attempts INTEGER NOT NULL DEFAULT 0,
+                        expires_at TIMESTAMP NOT NULL,
+                        last_sent_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        verified BOOLEAN NOT NULL DEFAULT FALSE,
+                        used BOOLEAN NOT NULL DEFAULT FALSE,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    );
+                """)
+                cur.execute("CREATE INDEX IF NOT EXISTS idx_password_otps_email ON password_otps(email);")
+
                 cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_approved BOOLEAN NOT NULL DEFAULT TRUE;")
                 cur.execute("ALTER TABLE cases ADD COLUMN IF NOT EXISTS affected_body_part VARCHAR(100);")
                 cur.execute("ALTER TABLE cases ADD COLUMN IF NOT EXISTS condition_duration VARCHAR(100);")
@@ -1126,6 +1218,21 @@ class LoginRequest(BaseModel):
     password: str
     portal_role: str | None = None
 
+
+
+class SendOtpRequest(BaseModel):
+    email: str
+
+
+class VerifyOtpRequest(BaseModel):
+    email: str
+    otp: str
+
+
+class ResetPasswordWithOtpRequest(BaseModel):
+    email: str
+    otp: str
+    new_password: str = Field(min_length=6, max_length=128)
 
 class ForgotPasswordRequest(BaseModel):
     email: str
@@ -1446,6 +1553,203 @@ def login(data: LoginRequest):
 
 
 # ---------------- PASSWORD RESET APIs ----------------
+
+
+# ---------------- OTP PASSWORD RESET APIs ----------------
+
+@app.post("/auth/send-otp")
+def send_otp(data: SendOtpRequest):
+    email = data.email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT user_id, name, email FROM users WHERE email = %s",
+                (email,)
+            )
+            user = cur.fetchone()
+
+            if not user:
+                # Return generic response to avoid account enumeration
+                return {
+                    "status": "success",
+                    "message": "If an account matches this email, a 6-digit OTP code has been sent.",
+                    "cooldown_seconds": 60
+                }
+
+            user_id, name, user_email = user
+
+            # Cooldown check: Check if an OTP was requested in the last 60 seconds
+            cur.execute(
+                """
+                SELECT last_sent_at FROM password_otps
+                WHERE email = %s AND used = FALSE
+                ORDER BY created_at DESC LIMIT 1
+                """,
+                (email,)
+            )
+            last = cur.fetchone()
+            if last and last[0]:
+                now = datetime.now(timezone.utc)
+                last_time = last[0]
+                if last_time.tzinfo is None:
+                    last_time = last_time.replace(tzinfo=timezone.utc)
+                diff = (now - last_time).total_seconds()
+                if diff < 60:
+                    remaining = int(60 - diff)
+                    raise HTTPException(
+                        status_code=429,
+                        detail=f"Please wait {remaining} seconds before requesting a new verification code."
+                    )
+
+            # Generate 6-digit numeric OTP (100000 - 999999)
+            raw_otp = f"{secrets.randbelow(900000) + 100000}"
+            otp_hash = hashlib.sha256(raw_otp.encode("utf-8")).hexdigest()
+            expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+
+            # Invalidate prior unused OTPs for this user
+            cur.execute(
+                "UPDATE password_otps SET used = TRUE WHERE email = %s AND used = FALSE",
+                (email,)
+            )
+
+            # Insert new OTP record
+            cur.execute(
+                """
+                INSERT INTO password_otps (user_id, email, otp_hash, attempts, expires_at, last_sent_at, verified, used)
+                VALUES (%s, %s, %s, 0, %s, CURRENT_TIMESTAMP, FALSE, FALSE)
+                """,
+                (user_id, email, otp_hash, expires_at)
+            )
+            conn.commit()
+
+            send_password_reset_otp_email(user_email, name, raw_otp)
+
+    return {
+        "status": "success",
+        "message": "A 6-digit verification code has been dispatched to your email address.",
+        "cooldown_seconds": 60
+    }
+
+
+@app.post("/auth/verify-otp")
+def verify_otp(data: VerifyOtpRequest):
+    email = data.email.strip().lower()
+    otp = data.otp.strip()
+
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Email is required.")
+    if not otp or len(otp) != 6 or not otp.isdigit():
+        raise HTTPException(status_code=400, detail="Please enter a valid 6-digit verification code.")
+
+    incoming_hash = hashlib.sha256(otp.encode("utf-8")).hexdigest()
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT otp_id, otp_hash, attempts, expires_at, verified, used
+                FROM password_otps
+                WHERE email = %s AND used = FALSE
+                ORDER BY created_at DESC LIMIT 1
+                """,
+                (email,)
+            )
+            record = cur.fetchone()
+
+            if not record:
+                raise HTTPException(status_code=400, detail="No active verification code found. Please request a new code.")
+
+            otp_id, otp_hash, attempts, expires_at, verified, used = record
+
+            if used:
+                raise HTTPException(status_code=400, detail="This code has already been used.")
+
+            now = datetime.now(timezone.utc)
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+            if now > expires_at:
+                cur.execute("UPDATE password_otps SET used = TRUE WHERE otp_id = %s", (otp_id,))
+                conn.commit()
+                raise HTTPException(status_code=400, detail="Verification code has expired. Please request a new one.")
+
+            if attempts >= 5:
+                cur.execute("UPDATE password_otps SET used = TRUE WHERE otp_id = %s", (otp_id,))
+                conn.commit()
+                raise HTTPException(status_code=400, detail="Too many incorrect attempts. Please request a new code.")
+
+            if incoming_hash != otp_hash:
+                new_attempts = attempts + 1
+                cur.execute("UPDATE password_otps SET attempts = %s WHERE otp_id = %s", (new_attempts, otp_id))
+                conn.commit()
+                remaining = max(0, 5 - new_attempts)
+                raise HTTPException(status_code=400, detail=f"Incorrect verification code. {remaining} attempts remaining.")
+
+            # Mark as verified
+            cur.execute("UPDATE password_otps SET verified = TRUE WHERE otp_id = %s", (otp_id,))
+            conn.commit()
+
+    return {
+        "status": "success",
+        "message": "Verification code verified successfully. Please enter your new password."
+    }
+
+
+@app.post("/auth/reset-password-otp")
+def reset_password_otp(data: ResetPasswordWithOtpRequest):
+    email = data.email.strip().lower()
+    otp = data.otp.strip()
+    new_password = data.new_password.strip()
+
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Email is required.")
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters.")
+
+    incoming_hash = hashlib.sha256(otp.encode("utf-8")).hexdigest()
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT otp_id, user_id, otp_hash, expires_at, verified, used
+                FROM password_otps
+                WHERE email = %s AND verified = TRUE AND used = FALSE
+                ORDER BY created_at DESC LIMIT 1
+                """,
+                (email,)
+            )
+            record = cur.fetchone()
+
+            if not record:
+                raise HTTPException(status_code=400, detail="Invalid or unverified session. Please verify your OTP code first.")
+
+            otp_id, user_id, otp_hash, expires_at, verified, used = record
+
+            if incoming_hash != otp_hash:
+                raise HTTPException(status_code=400, detail="Verification code mismatch.")
+
+            now = datetime.now(timezone.utc)
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+            if now > expires_at:
+                cur.execute("UPDATE password_otps SET used = TRUE WHERE otp_id = %s", (otp_id,))
+                conn.commit()
+                raise HTTPException(status_code=400, detail="Session expired. Please request a new code.")
+
+            hashed_pw = password_hash.hash(new_password)
+            cur.execute("UPDATE users SET password_hash = %s WHERE user_id = %s", (hashed_pw, user_id))
+            cur.execute("UPDATE password_otps SET used = TRUE WHERE otp_id = %s", (otp_id,))
+            conn.commit()
+
+    return {
+        "status": "success",
+        "message": "Password updated successfully. You may now sign in with your new credentials."
+    }
 
 @app.post("/auth/forgot-password")
 def forgot_password(data: ForgotPasswordRequest):

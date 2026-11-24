@@ -272,41 +272,59 @@ const DISEASE_DETAILS = {
   }
 };
 
-const WORKFLOW_STEPS = [
+const PATIENT_JOURNEY_STEPS = [
   {
     step: "01",
-    title: "Image Acquisition",
-    desc: "Capture a close-up photo using a smartphone camera or upload an existing image with standard lighting.",
-    icon: Camera
+    title: "Patient Registration",
+    desc: "Create a secure personal patient account with basic profile information.",
+    icon: UserCheck
   },
   {
     step: "02",
-    title: "Quality Verification",
-    desc: "OpenCV algorithms automatically evaluate sharpness (Laplacian variance), illumination, and contrast before analysis.",
-    icon: CheckCircle2
+    title: "Patient Login",
+    desc: "Securely sign in to your dedicated patient screening workspace.",
+    icon: Lock
   },
   {
     step: "03",
-    title: "Clinical Metadata Fusion",
-    desc: "Incorporate patient age, anatomical location, lesion itch, bleeding, and elevation to contextualize the analysis.",
-    icon: Sliders
+    title: "Capture or Upload Image",
+    desc: "Capture a lesion photograph using your smartphone camera or upload an existing photo.",
+    icon: Camera
   },
   {
     step: "04",
-    title: "Multimodal Deep Learning",
-    desc: "EfficientNet-B0 extracts 1,280 visual features, fused with 64 metadata dimensions for calibrated probability scoring.",
-    icon: Cpu
+    title: "Image Quality Check",
+    desc: "Real-time OpenCV check validates sharpness, illumination, and contrast before analysis.",
+    icon: CheckCircle2
   },
   {
     step: "05",
-    title: "Grad-CAM Heatmaps",
-    desc: "Gradient-weighted Class Activation Mapping highlights the exact lesion regions that influenced the model's decision.",
-    icon: Eye
+    title: "AI Skin Disease Analysis",
+    desc: "Multimodal deep learning evaluates visual features alongside clinical metadata.",
+    icon: BrainCircuit
   },
   {
     step: "06",
-    title: "Triage & Clinical Report",
-    desc: "The system assigns a risk level (Low, Moderate, High, Urgent), suggests clinical guidelines, and exports a signed report.",
+    title: "View Prediction Results",
+    desc: "Receive calibrated preliminary classification across six dermatological disease categories.",
+    icon: BarChart3
+  },
+  {
+    step: "07",
+    title: "View Grad-CAM Explainability",
+    desc: "Inspect visual attention heatmaps highlighting the exact biological borders analyzed.",
+    icon: Eye
+  },
+  {
+    step: "08",
+    title: "View Risk Category",
+    desc: "Review triage risk stratification (Low, Moderate, High, or Urgent) and recommended next steps.",
+    icon: AlertTriangle
+  },
+  {
+    step: "09",
+    title: "Download Reports & History",
+    desc: "Export clinical reports in PDF, JSON, or CSV formats and review historical screenings.",
     icon: FileText
   }
 ];
@@ -344,6 +362,73 @@ function App() {
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [activeDiseaseModal, setActiveDiseaseModal] = useState(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  // OTP-based Password Reset State
+  const [otpEmail, setOtpEmail] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpStep, setOtpStep] = useState(1);
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpMessage, setOtpMessage] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [otpNewPassword, setOtpNewPassword] = useState("");
+  const [otpConfirmPassword, setOtpConfirmPassword] = useState("");
+  const [showOtpNewPassword, setShowOtpNewPassword] = useState(false);
+  const [showOtpConfirmPassword, setShowOtpConfirmPassword] = useState(false);
+
+  // OTP Cooldown Timer
+  useEffect(() => {
+    if (otpCooldown > 0) {
+      const timer = setTimeout(() => setOtpCooldown(otpCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [otpCooldown]);
+
+  // Session Persistence: Restore session on refresh from localStorage
+  useEffect(() => {
+    const savedToken = localStorage.getItem("dermai_token");
+    if (savedToken) {
+      fetch(`${API_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${savedToken}` },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Invalid session");
+          return res.json();
+        })
+        .then((userData) => {
+          setToken(savedToken);
+          setUser(userData);
+          setPage("dashboard");
+
+          if (userData.role === "user") {
+            fetch(`${API_URL}/patient/profile`, {
+              headers: { Authorization: `Bearer ${savedToken}` },
+            })
+              .then((pRes) => pRes.json())
+              .then((pData) => {
+                if (pData.patient) {
+                  setPatientProfile(pData.patient);
+                  setPatientName(pData.patient.patient_name || userData.name || "");
+                  setPatientAge(String(pData.patient.age || ""));
+                  setPatientGender(pData.patient.gender || "");
+                  setMedicalHistory(pData.patient.medical_history || "");
+                  setPreviousSkinTreatments(pData.patient.previous_skin_treatments || "");
+                  setCurrentMedications(pData.patient.current_medications || "");
+                }
+              })
+              .catch(() => {});
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem("dermai_token");
+          localStorage.removeItem("dermai_user");
+          setToken("");
+          setUser(null);
+          setPage("landing");
+        });
+    }
+  }, []);
+
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -851,6 +936,8 @@ function App() {
 
       setToken(data.access_token);
       setUser(data.user);
+      localStorage.setItem("dermai_token", data.access_token);
+      localStorage.setItem("dermai_user", JSON.stringify(data.user));
       setActivePage("Dashboard");
       setPassword("");
 
@@ -960,6 +1047,8 @@ function App() {
 
       setToken(data.access_token);
       setUser(data.user);
+      localStorage.setItem("dermai_token", data.access_token);
+      localStorage.setItem("dermai_user", JSON.stringify(data.user));
       setPatientProfile(data.patient || null);
       setPatientName(data.patient?.patient_name || data.user.name || "");
       setPatientAge(String(data.patient?.age || ""));
@@ -974,6 +1063,109 @@ function App() {
       setMessage(error.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  // ---------------- OTP FORGOT PASSWORD HANDLERS ----------------
+
+  async function handleSendOtp(event) {
+    if (event && event.preventDefault) event.preventDefault();
+    if (!otpEmail.trim() || !otpEmail.includes("@")) {
+      setOtpError("Please enter a valid registered email address.");
+      return;
+    }
+    setOtpLoading(true);
+    setOtpError("");
+    setOtpMessage("");
+
+    try {
+      const res = await fetch(`${API_URL}/auth/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: otpEmail.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || "Could not dispatch verification code.");
+      }
+      setOtpMessage(data.message || "A 6-digit verification code has been dispatched to your email.");
+      setOtpCooldown(data.cooldown_seconds || 60);
+      setOtpStep(2);
+    } catch (err) {
+      setOtpError(err.message);
+    } finally {
+      setOtpLoading(false);
+    }
+  }
+
+  async function handleVerifyOtp(event) {
+    if (event && event.preventDefault) event.preventDefault();
+    if (!otpCode.trim() || otpCode.trim().length !== 6) {
+      setOtpError("Please enter the complete 6-digit verification code.");
+      return;
+    }
+    setOtpLoading(true);
+    setOtpError("");
+    setOtpMessage("");
+
+    try {
+      const res = await fetch(`${API_URL}/auth/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: otpEmail.trim(), otp: otpCode.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || "Invalid verification code.");
+      }
+      setOtpMessage("Code verified successfully. Please enter your new password.");
+      setOtpStep(3);
+    } catch (err) {
+      setOtpError(err.message);
+    } finally {
+      setOtpLoading(false);
+    }
+  }
+
+  async function handleResetPasswordOtp(event) {
+    if (event && event.preventDefault) event.preventDefault();
+    if (otpNewPassword.length < 6) {
+      setOtpError("New password must be at least 6 characters.");
+      return;
+    }
+    if (otpNewPassword !== otpConfirmPassword) {
+      setOtpError("Passwords do not match.");
+      return;
+    }
+    setOtpLoading(true);
+    setOtpError("");
+    setOtpMessage("");
+
+    try {
+      const res = await fetch(`${API_URL}/auth/reset-password-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: otpEmail.trim(),
+          otp: otpCode.trim(),
+          new_password: otpNewPassword.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || "Password reset failed.");
+      }
+      setMessage("Password successfully updated. You may now sign in with your new credentials.");
+      setOtpEmail("");
+      setOtpCode("");
+      setOtpNewPassword("");
+      setOtpConfirmPassword("");
+      setOtpStep(1);
+      setPage("login_patient");
+    } catch (err) {
+      setOtpError(err.message);
+    } finally {
+      setOtpLoading(false);
     }
   }
 
@@ -1056,6 +1248,8 @@ function App() {
   // ---------------- SIGN OUT ----------------
 
   function handleSignOut() {
+    localStorage.removeItem("dermai_token");
+    localStorage.removeItem("dermai_user");
     setToken("");
     setUser(null);
     setPage("landing");
@@ -1584,16 +1778,12 @@ function App() {
           <div className="landing-nav-container">
             <div className="landing-brand" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
               <img src="/dermai-icon.svg" alt="DermAI Logo" className="brand-logo-nav" />
-              <div className="brand-name-group">
-                <span className="brand-name-main">DermAI</span>
-                <span className="brand-badge-nav">CLINICAL AI</span>
-              </div>
+              <span className="brand-name-main">DermAI</span>
             </div>
 
             <nav className="landing-nav-links desktop-only">
               <a href="#hero">Home</a>
               <a href="#about">About Project</a>
-              <a href="#technology">Technology</a>
               <a href="#dataset">Dataset</a>
               <a href="#diseases">Diseases</a>
               <a href="#how-it-works">How It Works</a>
@@ -1603,23 +1793,33 @@ function App() {
             <div className="landing-nav-actions">
               <button
                 type="button"
-                className="nav-btn-subtle"
+                className="nav-portal-btn patient"
                 onClick={() => {
                   setMessage("");
-                  setPage("role_select");
+                  setPage("login_patient");
                 }}
               >
-                Sign In
+                Patient Login
               </button>
               <button
                 type="button"
-                className="nav-btn-primary"
+                className="nav-portal-btn clinician"
                 onClick={() => {
                   setMessage("");
-                  setPage("role_select");
+                  setPage("login_clinician");
                 }}
               >
-                Get Started <ArrowRight size={15} />
+                Clinician Login
+              </button>
+              <button
+                type="button"
+                className="nav-portal-btn admin"
+                onClick={() => {
+                  setMessage("");
+                  setPage("login_admin");
+                }}
+              >
+                Admin Login
               </button>
               <button
                 type="button"
@@ -1637,33 +1837,43 @@ function App() {
             <div className="mobile-nav-drawer">
               <a href="#hero" onClick={() => setMobileNavOpen(false)}>Home</a>
               <a href="#about" onClick={() => setMobileNavOpen(false)}>About Project</a>
-              <a href="#technology" onClick={() => setMobileNavOpen(false)}>Technology</a>
               <a href="#dataset" onClick={() => setMobileNavOpen(false)}>Dataset</a>
               <a href="#diseases" onClick={() => setMobileNavOpen(false)}>Diseases</a>
               <a href="#how-it-works" onClick={() => setMobileNavOpen(false)}>How It Works</a>
               <a href="#performance" onClick={() => setMobileNavOpen(false)}>Performance</a>
-              <div className="mobile-drawer-actions">
+              <div className="mobile-drawer-portals">
                 <button
                   type="button"
-                  className="nav-btn-subtle w-full"
+                  className="nav-portal-btn patient w-full"
                   onClick={() => {
                     setMobileNavOpen(false);
                     setMessage("");
-                    setPage("role_select");
+                    setPage("login_patient");
                   }}
                 >
-                  Sign In to Workspace
+                  Patient Login
                 </button>
                 <button
                   type="button"
-                  className="nav-btn-primary w-full"
+                  className="nav-portal-btn clinician w-full"
                   onClick={() => {
                     setMobileNavOpen(false);
                     setMessage("");
-                    setPage("role_select");
+                    setPage("login_clinician");
                   }}
                 >
-                  Get Started <ArrowRight size={15} />
+                  Clinician Login
+                </button>
+                <button
+                  type="button"
+                  className="nav-portal-btn admin w-full"
+                  onClick={() => {
+                    setMobileNavOpen(false);
+                    setMessage("");
+                    setPage("login_admin");
+                  }}
+                >
+                  Admin Login
                 </button>
               </div>
             </div>
@@ -1696,10 +1906,20 @@ function App() {
                   className="btn-hero-solid"
                   onClick={() => {
                     setMessage("");
-                    setPage("role_select");
+                    setPage("login_patient");
                   }}
                 >
-                  Get Started <ArrowRight size={18} />
+                  Patient Portal <ArrowRight size={18} />
+                </button>
+                <button
+                  type="button"
+                  className="btn-hero-solid clinician-btn"
+                  onClick={() => {
+                    setMessage("");
+                    setPage("login_clinician");
+                  }}
+                >
+                  Clinician Portal <ArrowRight size={18} />
                 </button>
                 <button
                   type="button"
@@ -1748,7 +1968,7 @@ function App() {
                   </div>
                   <div className="scanner-title-hud">
                     <Activity size={14} className="hud-pulse-icon" />
-                    <span>DermAI Multimodal Inference Engine &bull; LIVE</span>
+                    <span>DermAI Multimodal Inference Engine</span>
                   </div>
                   <span className="hud-status-badge">PASS</span>
                 </div>
@@ -1811,7 +2031,7 @@ function App() {
               <span className="section-eyebrow">ABOUT DERMAI</span>
               <h2 className="section-title">Bridging Mobile Imaging and Dermatological Decision Support</h2>
               <p className="section-desc">
-                DermAI is a deep learning-based skin disease analysis platform that analyzes uploaded or captured skin images and provides predicted classifications alongside explainable AI visualizations. It leverages multimodal clinical feature fusion and pre-inference image quality gating to ensure diagnostic accuracy and clinical reliability.
+                DermAI is a deep learning-based skin disease analysis platform that analyzes uploaded or captured skin images and provides predicted classifications alongside explainable AI visualizations. It leverages multimodal clinical feature fusion and pre-inference image quality gating to assist preliminary screening and clinical decision support.
               </p>
             </div>
 
@@ -2015,7 +2235,7 @@ function App() {
                   className="btn-modal-screen"
                   onClick={() => {
                     setActiveDiseaseModal(null);
-                    setPage("role_select");
+                    setPage("login_patient");
                   }}
                 >
                   Start Screening Now &rarr;
@@ -2025,61 +2245,30 @@ function App() {
           </div>
         )}
 
-        {/* How It Works Section */}
+        {/* How DermAI Works — Actual Patient Journey (9 Steps) */}
         <section id="how-it-works" className="landing-section-wrap">
           <div className="landing-container">
             <div className="section-header-center">
-              <span className="section-eyebrow">WORKFLOW</span>
+              <span className="section-eyebrow">PATIENT SCREENING JOURNEY</span>
               <h2 className="section-title">How DermAI Works</h2>
               <p className="section-desc">
-                From mobile photograph capture to clinical decision support in 6 transparent, verified steps.
+                A simple, guided 9-step screening workflow designed for rapid and transparent skin disease analysis.
               </p>
             </div>
 
-            <div className="workflow-steps-grid">
-              {WORKFLOW_STEPS.map((wf, idx) => {
-                const IconComponent = wf.icon;
+            <div className="patient-journey-grid">
+              {PATIENT_JOURNEY_STEPS.map((stepItem, idx) => {
+                const StepIcon = stepItem.icon;
                 return (
-                  <div key={idx} className="workflow-card">
-                    <div className="workflow-card-top">
-                      <span className="workflow-step-num">{wf.step}</span>
-                      <div className="workflow-icon-box">
-                        <IconComponent size={22} />
+                  <div key={idx} className="journey-step-card">
+                    <div className="journey-card-top">
+                      <span className="journey-step-badge">{stepItem.step}</span>
+                      <div className="journey-icon-circle">
+                        <StepIcon size={20} />
                       </div>
                     </div>
-                    <h3>{wf.title}</h3>
-                    <p>{wf.desc}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* Technology Stack Section */}
-        <section id="technology" className="landing-section-wrap bg-light">
-          <div className="landing-container">
-            <div className="section-header-center">
-              <span className="section-eyebrow">ARCHITECTURE</span>
-              <h2 className="section-title">State-of-the-Art Technology Stack</h2>
-              <p className="section-desc">
-                Engineered for speed, clinical accuracy, model explainability, and enterprise-grade medical data security.
-              </p>
-            </div>
-
-            <div className="tech-stack-grid">
-              {TECH_STACK.map((item, idx) => {
-                const TechIcon = item.icon;
-                return (
-                  <div key={idx} className="tech-item-card">
-                    <div className="tech-icon-wrap">
-                      <TechIcon size={24} />
-                    </div>
-                    <div>
-                      <span className="tech-role-badge">{item.role}</span>
-                      <h4 className="tech-name">{item.name}</h4>
-                      <p className="tech-desc">{item.desc}</p>
-                    </div>
+                    <h3 className="journey-step-title">{stepItem.title}</h3>
+                    <p className="journey-step-desc">{stepItem.desc}</p>
                   </div>
                 );
               })}
@@ -2088,7 +2277,7 @@ function App() {
         </section>
 
         {/* Model Performance Section */}
-        <section id="performance" className="landing-section-wrap">
+        <section id="performance" className="landing-section-wrap bg-light">
           <div className="landing-container">
             <div className="section-header-center">
               <span className="section-eyebrow">EVALUATION BENCHMARK</span>
@@ -2111,10 +2300,10 @@ function App() {
             <div className="architecture-justification-banner">
               <div className="justification-header">
                 <Award size={20} className="award-icon" />
-                <h4>Production Selection: EfficientNet-B0 Compound Scaling</h4>
+                <h4>Production Architecture: EfficientNet-B0 Multimodal Model</h4>
               </div>
               <p>
-                While ResNet50 achieved 77.83% accuracy, its recall on malignant classes was only 64.13%. EfficientNet-B0 was selected for production because of its superior <strong>70.47% Macro Recall</strong>, <strong>97.69% Melanoma ROC-AUC</strong>, and rapid <strong>34.09 ms inference latency</strong>, making it the most clinically sensitive model for urgent malignant lesions.
+                Selected for production due to its superior sensitivity on malignant categories (<strong>70.47% Macro Recall</strong>, <strong>97.69% Melanoma ROC-AUC</strong>) and fast <strong>34.09 ms inference latency</strong>, ensuring rapid preliminary triage.
               </p>
             </div>
           </div>
@@ -2130,11 +2319,11 @@ function App() {
                   <span className="footer-brand-title">DermAI</span>
                 </div>
                 <p className="footer-mission-text">
-                  Advanced multimodal skin disease screening powered by compound-scaled deep learning and explainable AI.
+                  AI-assisted skin disease detector from mobile images using deep learning and explainable AI.
                 </p>
                 <div className="footer-compliance-badges">
                   <span>PAD-UFES-20 Benchmarked</span>
-                  <span>ISO-Aligned Architecture</span>
+                  <span>EfficientNet-B0 Multimodal</span>
                 </div>
               </div>
 
@@ -2142,7 +2331,6 @@ function App() {
                 <h4>Navigation</h4>
                 <a href="#hero">Home</a>
                 <a href="#about">About Project</a>
-                <a href="#technology">Technology</a>
                 <a href="#dataset">Dataset</a>
                 <a href="#diseases">Diseases</a>
                 <a href="#how-it-works">How It Works</a>
@@ -2150,30 +2338,24 @@ function App() {
               </div>
 
               <div className="footer-portals-col">
-                <h4>Clinical Portals</h4>
-                <button type="button" onClick={() => { setMessage(""); setPage("login_patient"); }}>Patient Portal</button>
-                <button type="button" onClick={() => { setMessage(""); setPage("login_clinician"); }}>Clinician Portal</button>
-                <button type="button" onClick={() => { setMessage(""); setPage("login_admin"); }}>Administrator Portal</button>
-                <button type="button" onClick={() => { setMessage(""); setPage("role_select"); }}>Portal Selection</button>
+                <h4>Portals</h4>
+                <button type="button" onClick={() => { setMessage(""); setPage("login_patient"); }}>Patient Login</button>
+                <button type="button" onClick={() => { setMessage(""); setPage("login_clinician"); }}>Clinician Login</button>
+                <button type="button" onClick={() => { setMessage(""); setPage("login_admin"); }}>Admin Login</button>
               </div>
 
               <div className="footer-contact-col">
-                <h4>Platform & Support</h4>
+                <h4>Support</h4>
                 <p>Support: <a href="mailto:dermai.diagnostics@gmail.com">dermai.diagnostics@gmail.com</a></p>
-                <p>Deployment: Docker Container on Render Cloud</p>
-                <p>API Status: Operational (PostgreSQL + PyTorch)</p>
               </div>
             </div>
 
-            {/* Medical Disclaimer Banner */}
-            <div className="footer-medical-disclaimer">
-              <div className="disclaimer-header">
-                <AlertTriangle size={18} />
-                <strong>CLINICAL & REGULATORY MEDICAL DISCLAIMER</strong>
-              </div>
-              <p>
-                DermAI is an artificial intelligence-assisted diagnostic screening tool intended for preliminary screening, educational research, and clinical decision support. DermAI is not an autonomous medical device and does not provide definitive medical diagnoses. All outputs, including predictions, risk stratifications, and Grad-CAM saliency visualizations, must be verified by a licensed healthcare professional, dermatologist, or pathologist before initiating clinical interventions.
-              </p>
+            {/* Concise Medical Notice */}
+            <div className="footer-medical-notice">
+              <Info size={16} />
+              <span>
+                <strong>Medical Notice:</strong> DermAI assists preliminary dermatological screening and clinical decision support and does not replace professional diagnosis.
+              </span>
             </div>
 
             <div className="footer-bottom-row">
@@ -2181,9 +2363,7 @@ function App() {
               <div className="footer-links-row">
                 <span>Privacy Protocol</span>
                 <span>&bull;</span>
-                <span>Terms of Medical Use</span>
-                <span>&bull;</span>
-                <span>Model Card & Benchmarks</span>
+                <span>Terms of Use</span>
               </div>
             </div>
           </div>
@@ -2192,149 +2372,7 @@ function App() {
     );
   }
 
-  // ---------------- ROLE SELECTION PORTAL ----------------
-
-  if (page === "role_select") {
-    return (
-      <main className="role-portal-page">
-        <div className="role-portal-container">
-          <div className="role-portal-header">
-            <div className="landing-brand-center" onClick={() => setPage("landing")}>
-              <img src="/dermai-icon.svg" alt="DermAI" className="role-logo-img" />
-              <div className="brand-name-group">
-                <span className="brand-name-main">DermAI</span>
-                <span className="brand-badge-nav">CLINICAL SUITE</span>
-              </div>
-            </div>
-
-            <h1 className="role-portal-title">Select Your Workspace Portal</h1>
-            <p className="role-portal-sub">
-              Choose the portal tailored to your role in the dermatological screening workflow:
-            </p>
-          </div>
-
-          <div className="role-cards-container">
-            {/* Patient Portal Card */}
-            <div
-              className="role-selection-card patient"
-              onClick={() => {
-                setMessage("");
-                setPage("login_patient");
-              }}
-            >
-              <div className="role-card-badge patient">Patient Care</div>
-              <div className="role-icon-box patient">
-                <HeartPulse size={36} />
-              </div>
-              <h2 className="role-title">Patient Portal</h2>
-              <p className="role-desc">
-                Submit smartphone photographs of skin lesions, receive immediate automated quality validation, view preliminary AI predictions, and track your screening records.
-              </p>
-              <ul className="role-feature-bullets">
-                <li><Check size={16} /> Instant photo upload & quality check</li>
-                <li><Check size={16} /> Multimodal AI screening results</li>
-                <li><Check size={16} /> Personal dermatological history records</li>
-              </ul>
-              <button
-                type="button"
-                className="btn-enter-portal patient"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setMessage("");
-                  setPage("login_patient");
-                }}
-              >
-                Enter Patient Portal &rarr;
-              </button>
-            </div>
-
-            {/* Clinician Portal Card */}
-            <div
-              className="role-selection-card clinician"
-              onClick={() => {
-                setMessage("");
-                setPage("login_clinician");
-              }}
-            >
-              <div className="role-card-badge clinician">Medical Professional</div>
-              <div className="role-icon-box clinician">
-                <Stethoscope size={36} />
-              </div>
-              <h2 className="role-title">Clinician Portal</h2>
-              <p className="role-desc">
-                Access patient triage queues, examine dual-view Grad-CAM explainability heatmaps, verify diagnostic findings, submit clinical notes, and export verified PDF reports.
-              </p>
-              <ul className="role-feature-bullets">
-                <li><Check size={16} /> Risk-prioritized triage queue</li>
-                <li><Check size={16} /> Grad-CAM attention heatmaps</li>
-                <li><Check size={16} /> One-click review approval & email alerts</li>
-              </ul>
-              <button
-                type="button"
-                className="btn-enter-portal clinician"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setMessage("");
-                  setPage("login_clinician");
-                }}
-              >
-                Enter Clinician Portal &rarr;
-              </button>
-            </div>
-
-            {/* Administrator Portal Card */}
-            <div
-              className="role-selection-card admin"
-              onClick={() => {
-                setMessage("");
-                setPage("login_admin");
-              }}
-            >
-              <div className="role-card-badge admin">System Governance</div>
-              <div className="role-icon-box admin">
-                <Shield size={36} />
-              </div>
-              <h2 className="role-title">Administrator Portal</h2>
-              <p className="role-desc">
-                Oversee medical staff credentials, approve new clinician registrations, monitor database connection telemetry, and inspect real-time AI inference performance.
-              </p>
-              <ul className="role-feature-bullets">
-                <li><Check size={16} /> Clinician approval & credentialing</li>
-                <li><Check size={16} /> Database audit logs & user management</li>
-                <li><Check size={16} /> Model latency & memory telemetry</li>
-              </ul>
-              <button
-                type="button"
-                className="btn-enter-portal admin"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setMessage("");
-                  setPage("login_admin");
-                }}
-              >
-                Enter Admin Portal &rarr;
-              </button>
-            </div>
-          </div>
-
-          <div className="role-portal-bottom-action">
-            <button
-              type="button"
-              className="btn-back-home"
-              onClick={() => {
-                setMessage("");
-                setPage("landing");
-              }}
-            >
-              &larr; Return to Public Landing Page
-            </button>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  // ---------------- DEDICATED ROLE LOGIN PAGES ----------------
+  // ---------------- SEPARATE LOGIN PAGES ----------------
 
   if (page === "login_patient" || page === "login_clinician" || page === "login_admin" || page === "login") {
     const portalRole =
@@ -2343,62 +2381,52 @@ function App() {
 
     const portalConfig = {
       patient: {
-        title: "Patient Portal",
-        badge: "Patient Self-Screening Workspace",
+        title: "Patient Login",
         subtitle: "Sign in to access your screening history and submit new lesion images",
-        heroTagline: "Personal Dermatological Care & Screening",
-        heroDesc: "Submit skin photographs directly from your smartphone, review automated preliminary diagnostic assessments, and securely track your personal health history.",
+        badge: "Patient Care",
         bullets: [
           "Instant image quality validation (sharpness & illumination)",
           "Multimodal AI classification across 6 lesion types",
           "Grad-CAM explainable attention heatmap visualizations",
           "Encrypted medical history and clinical tracking"
         ],
-        switchText: "Don't have a patient account?",
-        switchAction: "Create Patient Account &rarr;",
-        onSwitch: () => {
-          setRole("user");
+        registerPrompt: "Don't have a patient account?",
+        registerAction: "Register as Patient &rarr;",
+        onRegister: () => {
           setMessage("");
-          setPage("register");
+          setPage("register_patient");
         }
       },
       clinician: {
-        title: "Clinician Portal",
-        badge: "Diagnostic Review & Decision Support",
-        subtitle: "Sign in to examine triage queues and approve diagnostic reports",
-        heroTagline: "Clinical Decision Support & Verification",
-        heroDesc: "Access prioritized patient screening queues, examine Grad-CAM explainability saliency maps, verify preliminary diagnoses, and dispatch authenticated clinical reports.",
+        title: "Clinician Login",
+        subtitle: "Diagnostic decision-support workspace for accredited dermatologists",
+        badge: "Clinician Workspace",
         bullets: [
           "Prioritized triage queue by malignancy risk level",
           "Dual-view Grad-CAM heatmaps & overlay comparisons",
           "PAD-UFES-20 model performance telemetry & benchmarks",
           "One-click clinical report verification and email alert dispatch"
         ],
-        switchText: "New medical clinician?",
-        switchAction: "Register for Staff Credentialing &rarr;",
-        onSwitch: () => {
-          setRole("clinician");
+        registerPrompt: "New medical clinician?",
+        registerAction: "Register for Staff Credentialing &rarr;",
+        onRegister: () => {
           setMessage("");
-          setPage("register");
+          setPage("register_clinician");
         }
       },
       admin: {
-        title: "Administrator Portal",
-        badge: "Platform Governance & Security",
-        subtitle: "Sign in to manage clinician credentials and system audits",
-        heroTagline: "Platform Security & Diagnostic Telemetry",
-        heroDesc: "Oversee platform health, approve medical staff accounts, monitor model inference latency, and inspect database audit logs with strict role-based controls.",
+        title: "Administrator Login",
+        subtitle: "Platform governance and clinical staff credentialing console",
+        badge: "System Governance",
         bullets: [
           "Clinician credentialing and account approval workflow",
           "Live PostgreSQL database connection telemetry",
           "Model latency tracking & hardware allocation metrics",
           "Role-based access control and session encryption"
         ],
-        switchText: "Need administrative assistance?",
-        switchAction: "Contact Technical Operations",
-        onSwitch: () => {
-          setMessage("Default Administrator credentials: admin@dermai.com / Admin@123");
-        }
+        registerPrompt: null,
+        registerAction: null,
+        onRegister: null
       }
     }[portalRole];
 
@@ -2410,16 +2438,13 @@ function App() {
             <div className="login-hero-content">
               <div className="login-hero-brand" onClick={() => setPage("landing")}>
                 <img src="/dermai-icon.svg" alt="DermAI" className="hero-brand-svg" />
-                <div className="brand-name-group">
-                  <span className="brand-name-main text-white">DermAI</span>
-                  <span className="brand-badge-hero">{portalRole.toUpperCase()}</span>
-                </div>
+                <span className="brand-name-main text-white">DermAI</span>
               </div>
 
               <div className="login-hero-text-block">
                 <span className="login-hero-pill">{portalConfig.badge}</span>
-                <h2>{portalConfig.heroTagline}</h2>
-                <p>{portalConfig.heroDesc}</p>
+                <h2>{portalConfig.title}</h2>
+                <p>{portalConfig.subtitle}</p>
               </div>
 
               <div className="login-hero-bullets">
@@ -2455,7 +2480,7 @@ function App() {
                   <label>Email Address</label>
                   <input
                     type="email"
-                    placeholder="name@dermai.clinical"
+                    placeholder="name@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -2470,6 +2495,9 @@ function App() {
                       className="link-forgot-btn"
                       onClick={() => {
                         setMessage("");
+                        setOtpError("");
+                        setOtpMessage("");
+                        setOtpStep(1);
                         setPage("forgot");
                       }}
                     >
@@ -2514,7 +2542,7 @@ function App() {
                       Authenticating...
                     </span>
                   ) : (
-                    `Sign In to ${portalConfig.title} →`
+                    `Sign In →`
                   )}
                 </button>
               </form>
@@ -2527,24 +2555,52 @@ function App() {
               )}
 
               <div className="form-card-footer">
-                <div className="auth-switch-box">
-                  <span>{portalConfig.switchText}</span>{" "}
-                  <button type="button" className="link-highlight" onClick={portalConfig.onSwitch}>
-                    {portalConfig.switchAction}
-                  </button>
-                </div>
+                {portalConfig.registerPrompt && (
+                  <div className="auth-switch-box">
+                    <span>{portalConfig.registerPrompt}</span>{" "}
+                    <button type="button" className="link-highlight" onClick={portalConfig.onRegister}>
+                      {portalConfig.registerAction}
+                    </button>
+                  </div>
+                )}
 
                 <div className="switch-portal-actions">
-                  <button
-                    type="button"
-                    className="btn-subtle-switch"
-                    onClick={() => {
-                      setMessage("");
-                      setPage("role_select");
-                    }}
-                  >
-                    &larr; Switch to Another Portal
-                  </button>
+                  {portalRole !== "patient" && (
+                    <button
+                      type="button"
+                      className="btn-subtle-switch"
+                      onClick={() => {
+                        setMessage("");
+                        setPage("login_patient");
+                      }}
+                    >
+                      Patient Login
+                    </button>
+                  )}
+                  {portalRole !== "clinician" && (
+                    <button
+                      type="button"
+                      className="btn-subtle-switch"
+                      onClick={() => {
+                        setMessage("");
+                        setPage("login_clinician");
+                      }}
+                    >
+                      Clinician Login
+                    </button>
+                  )}
+                  {portalRole !== "admin" && (
+                    <button
+                      type="button"
+                      className="btn-subtle-switch"
+                      onClick={() => {
+                        setMessage("");
+                        setPage("login_admin");
+                      }}
+                    >
+                      Admin Login
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="btn-subtle-switch"
@@ -2553,7 +2609,7 @@ function App() {
                       setPage("landing");
                     }}
                   >
-                    Return to Public Home &rarr;
+                    Home &rarr;
                   </button>
                 </div>
               </div>
@@ -2564,88 +2620,64 @@ function App() {
     );
   }
 
-  // ---------------- REGISTRATION PAGE ----------------
+  // ---------------- SEPARATE PATIENT REGISTRATION ----------------
 
-  if (page === "register") {
+  if (page === "register_patient") {
     return (
       <main className="register-page-wrap">
         <div className="register-container-split">
-          {/* Left Hero Column */}
           <section className="register-hero-side">
             <div>
               <div className="hero-status-tag">
                 <span className="live-pulse"></span>
-                <span>Clinical Multimodal AI Platform</span>
+                <span>Patient Registration</span>
               </div>
 
               <div className="register-hero-brand" onClick={() => setPage("landing")}>
                 <img src="/dermai-icon.svg" alt="DermAI" className="hero-brand-svg" />
                 <div>
-                  <h2>DermAI Clinical Platform</h2>
-                  <span className="hero-tagline">Multimodal Deep Learning Dermatological Screening</span>
+                  <h2>DermAI Platform</h2>
+                  <span className="hero-tagline">AI-Powered Skin Disease Screening</span>
                 </div>
               </div>
 
               <div className="register-hero-intro">
-                <h3>Empowering Skin Disease Pre-Screening</h3>
+                <h3>Start Your Skin Health Journey</h3>
                 <p>
-                  Join DermAI to leverage clinical multimodal AI trained on the PAD-UFES-20 smartphone dataset.
-                  Screen and triage skin lesions in real-time with explainable AI support.
+                  Create a patient account to upload skin photos, verify image quality, and receive preliminary AI-assisted screening assessments.
                 </p>
-              </div>
-
-              <div className="hero-metrics-grid">
-                <div className="hero-metric-box">
-                  <strong>98.07%</strong>
-                  <span>Train Accuracy</span>
-                </div>
-                <div className="hero-metric-box">
-                  <strong>76.74%</strong>
-                  <span>Test Accuracy</span>
-                </div>
-                <div className="hero-metric-box">
-                  <strong>97.69%</strong>
-                  <span>Melanoma AUC</span>
-                </div>
-                <div className="hero-metric-box">
-                  <strong>34 ms</strong>
-                  <span>Inference Speed</span>
-                </div>
               </div>
 
               <div className="hero-features-list">
                 <div className="hero-feature-item">
                   <div className="feature-dot"></div>
                   <div>
-                    <h4>Real-time Image Quality Assessment</h4>
-                    <p>OpenCV validation checks sharpness & illumination before clinical inference.</p>
+                    <h4>Automated Quality Checks</h4>
+                    <p>OpenCV checks blurriness and lighting before analysis.</p>
                   </div>
                 </div>
-
                 <div className="hero-feature-item">
                   <div className="feature-dot"></div>
                   <div>
-                    <h4>Multimodal Fusion Architecture</h4>
-                    <p>Integrates 64 clinical features with EfficientNet-B0 visual representations.</p>
+                    <h4>Explainable AI (Grad-CAM)</h4>
+                    <p>Visual heatmaps show regions analyzed by the deep learning model.</p>
                   </div>
                 </div>
-
                 <div className="hero-feature-item">
                   <div className="feature-dot"></div>
                   <div>
-                    <h4>Explainable AI with Grad-CAM</h4>
-                    <p>Visual attention heatmaps provide transparent decision-making support.</p>
+                    <h4>Report History & Export</h4>
+                    <p>Track your past screenings and download clinical reports.</p>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="register-hero-footer">
-              <p>🔒 End-to-end encrypted medical data &middot; HIPAA aligned cloud deployment</p>
+              <p>🔒 End-to-end encrypted medical data</p>
             </div>
           </section>
 
-          {/* Right Form Column */}
           <section className="register-form-side">
             <div className="register-card">
               <div className="form-card-header">
@@ -2653,51 +2685,13 @@ function App() {
                   <img src="/dermai-icon.svg" alt="DermAI" className="form-logo-svg" />
                   <span className="form-brand-name">DermAI</span>
                 </div>
-                <h2>Create an Account</h2>
+                <h2>Patient Registration</h2>
                 <p className="subtitle">
-                  Join the platform to screen, review, or manage dermatological diagnostic cases.
+                  Fill in your details to create your secure patient screening profile.
                 </p>
               </div>
 
-              {/* Role Toggle Selector */}
-              <div className="role-selector-wrap">
-                <label className="field-label">I am registering as:</label>
-                <div className="role-toggle-group">
-                  <button
-                    type="button"
-                    className={`role-toggle-btn ${role === "user" ? "active" : ""}`}
-                    onClick={() => setRole("user")}
-                  >
-                    <span className="role-btn-icon">👤</span>
-                    <div>
-                      <strong>Patient</strong>
-                      <small>Upload & monitor cases</small>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    className={`role-toggle-btn ${role === "clinician" ? "active" : ""}`}
-                    onClick={() => setRole("clinician")}
-                  >
-                    <span className="role-btn-icon">🩺</span>
-                    <div>
-                      <strong>Clinician</strong>
-                      <small>Diagnostic review & notes</small>
-                    </div>
-                  </button>
-                </div>
-
-                {role === "clinician" && (
-                  <div className="clinician-notice-banner">
-                    <span className="notice-icon">ℹ️</span>
-                    <p>Clinician accounts require administrator credential verification before accessing patient records.</p>
-                  </div>
-                )}
-              </div>
-
               <form onSubmit={handleRegister} className="register-form">
-                {/* Account Details */}
                 <div className="form-section-title">Account Credentials</div>
 
                 <div className="form-row-2col">
@@ -2705,7 +2699,7 @@ function App() {
                     <label>Full Name *</label>
                     <input
                       type="text"
-                      placeholder={role === "clinician" ? "Dr. Jane Doe" : "Jane Doe"}
+                      placeholder="Jane Doe"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
@@ -2768,79 +2762,77 @@ function App() {
                   </div>
                 </div>
 
-                {/* Patient Profile Fields */}
-                {role === "user" && (
-                  <div className="patient-fields-block">
-                    <div className="form-section-title">Patient Profile Information</div>
+                <div className="patient-fields-block">
+                  <div className="form-section-title">Patient Profile Information</div>
 
-                    <div className="form-row-2col">
-                      <div className="form-group-login">
-                        <label>Age *</label>
-                        <input
-                          type="number"
-                          placeholder="e.g. 45"
-                          value={patientAge}
-                          onChange={(e) => setPatientAge(e.target.value)}
-                          min={1}
-                          max={120}
-                          required
-                        />
-                      </div>
-
-                      <div className="form-group-login">
-                        <label>Biological Sex</label>
-                        <select
-                          value={patientGender}
-                          onChange={(e) => setPatientGender(e.target.value)}
-                        >
-                          <option value="">Select sex</option>
-                          <option value="female">Female</option>
-                          <option value="male">Male</option>
-                          <option value="other">Other</option>
-                        </select>
-                      </div>
-                    </div>
-
+                  <div className="form-row-2col">
                     <div className="form-group-login">
-                      <label>Medical History</label>
-                      <textarea
-                        rows={2}
-                        placeholder="Relevant medical history (e.g. sun exposure, family history of melanoma)"
-                        value={medicalHistory}
-                        onChange={(e) => setMedicalHistory(e.target.value)}
+                      <label>Age *</label>
+                      <input
+                        type="number"
+                        placeholder="e.g. 45"
+                        value={patientAge}
+                        onChange={(e) => setPatientAge(e.target.value)}
+                        min={1}
+                        max={120}
+                        required
                       />
                     </div>
 
-                    <div className="form-row-2col">
-                      <div className="form-group-login">
-                        <label>Previous Skin Treatments</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Cryotherapy, excision, none"
-                          value={previousSkinTreatments}
-                          onChange={(e) => setPreviousSkinTreatments(e.target.value)}
-                        />
-                      </div>
-
-                      <div className="form-group-login">
-                        <label>Current Medications</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Immunosuppressants, none"
-                          value={currentMedications}
-                          onChange={(e) => setCurrentMedications(e.target.value)}
-                        />
-                      </div>
+                    <div className="form-group-login">
+                      <label>Biological Sex</label>
+                      <select
+                        value={patientGender}
+                        onChange={(e) => setPatientGender(e.target.value)}
+                      >
+                        <option value="">Select sex</option>
+                        <option value="female">Female</option>
+                        <option value="male">Male</option>
+                        <option value="other">Other</option>
+                      </select>
                     </div>
                   </div>
-                )}
 
-                <button type="submit" className="btn-login-submit" disabled={loading}>
-                  {loading
-                    ? "Creating Account..."
-                    : role === "clinician"
-                    ? "Submit Clinician Application &rarr;"
-                    : "Complete Registration &rarr;"}
+                  <div className="form-group-login">
+                    <label>Medical History</label>
+                    <textarea
+                      rows={2}
+                      placeholder="Relevant medical history (e.g. sun exposure, family history of melanoma)"
+                      value={medicalHistory}
+                      onChange={(e) => setMedicalHistory(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-row-2col">
+                    <div className="form-group-login">
+                      <label>Previous Skin Treatments</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Cryotherapy, excision, none"
+                        value={previousSkinTreatments}
+                        onChange={(e) => setPreviousSkinTreatments(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="form-group-login">
+                      <label>Current Medications</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Immunosuppressants, none"
+                        value={currentMedications}
+                        onChange={(e) => setCurrentMedications(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn-login-submit"
+                  disabled={loading}
+                  onClick={() => setRole("user")}
+                >
+                  {loading ? "Creating Account..." : "Complete Patient Registration →"}
                 </button>
               </form>
 
@@ -2859,7 +2851,7 @@ function App() {
                     className="text-button-highlight"
                     onClick={() => {
                       setMessage("");
-                      setPage("role_select");
+                      setPage("login_patient");
                     }}
                   >
                     Sign In &rarr;
@@ -2873,7 +2865,7 @@ function App() {
                     setPage("landing");
                   }}
                 >
-                  &larr; Return to Public Home
+                  &larr; Return to Home
                 </button>
               </div>
             </div>
@@ -2883,7 +2875,201 @@ function App() {
     );
   }
 
-  // ---------------- FORGOT PASSWORD PAGE ----------------
+  // ---------------- SEPARATE CLINICIAN REGISTRATION ----------------
+
+  if (page === "register_clinician") {
+    return (
+      <main className="register-page-wrap">
+        <div className="register-container-split">
+          <section className="register-hero-side">
+            <div>
+              <div className="hero-status-tag">
+                <span className="live-pulse"></span>
+                <span>Clinician Credentialing</span>
+              </div>
+
+              <div className="register-hero-brand" onClick={() => setPage("landing")}>
+                <img src="/dermai-icon.svg" alt="DermAI" className="hero-brand-svg" />
+                <div>
+                  <h2>DermAI Platform</h2>
+                  <span className="hero-tagline">Clinical Decision Support Suite</span>
+                </div>
+              </div>
+
+              <div className="register-hero-intro">
+                <h3>Join the Dermatological Clinical Network</h3>
+                <p>
+                  Register as a clinician to access prioritized patient triage queues, inspect Grad-CAM explainability heatmaps, verify diagnoses, and approve reports.
+                </p>
+              </div>
+
+              <div className="hero-features-list">
+                <div className="hero-feature-item">
+                  <div className="feature-dot"></div>
+                  <div>
+                    <h4>Prioritized Triage Queues</h4>
+                    <p>Automated sorting by malignancy risk level (Low, Moderate, High, Urgent).</p>
+                  </div>
+                </div>
+                <div className="hero-feature-item">
+                  <div className="feature-dot"></div>
+                  <div>
+                    <h4>Dual-View Grad-CAM Overlays</h4>
+                    <p>Side-by-side original image and saliency activation maps.</p>
+                  </div>
+                </div>
+                <div className="hero-feature-item">
+                  <div className="feature-dot"></div>
+                  <div>
+                    <h4>Signed Clinical Reports</h4>
+                    <p>Approve cases, attach clinical notes, and dispatch verified alerts.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="register-hero-footer">
+              <p>🔒 Strictly governed by medical administrator approval</p>
+            </div>
+          </section>
+
+          <section className="register-form-side">
+            <div className="register-card">
+              <div className="form-card-header">
+                <div className="form-brand-row">
+                  <img src="/dermai-icon.svg" alt="DermAI" className="form-logo-svg" />
+                  <span className="form-brand-name">DermAI</span>
+                </div>
+                <h2>Clinician Registration</h2>
+                <p className="subtitle">
+                  Apply for medical reviewer credentials.
+                </p>
+              </div>
+
+              <div className="clinician-notice-banner">
+                <span className="notice-icon">ℹ️</span>
+                <p>Clinician accounts require administrator approval before clinical case access is activated.</p>
+              </div>
+
+              <form onSubmit={handleRegister} className="register-form">
+                <div className="form-section-title">Clinician Credentials</div>
+
+                <div className="form-group-login">
+                  <label>Full Name *</label>
+                  <input
+                    type="text"
+                    placeholder="Dr. Jane Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group-login">
+                  <label>Email Address *</label>
+                  <input
+                    type="email"
+                    placeholder="doctor@hospital.org"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-row-2col">
+                  <div className="form-group-login">
+                    <label>Password (min 8 chars) *</label>
+                    <div className="password-input-wrapper">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="At least 8 characters"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        minLength={8}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="btn-toggle-eye"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="form-group-login">
+                    <label>Confirm Password *</label>
+                    <div className="password-input-wrapper">
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Re-enter password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        minLength={8}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="btn-toggle-eye"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn-login-submit"
+                  disabled={loading}
+                  onClick={() => setRole("clinician")}
+                >
+                  {loading ? "Submitting Application..." : "Submit Clinician Application →"}
+                </button>
+              </form>
+
+              {message && (
+                <div className="form-alert-message" role="alert">
+                  <Info size={16} />
+                  <span>{message}</span>
+                </div>
+              )}
+
+              <div className="login-footer">
+                <p className="auth-switch">
+                  Already registered?{" "}
+                  <button
+                    type="button"
+                    className="text-button-highlight"
+                    onClick={() => {
+                      setMessage("");
+                      setPage("login_clinician");
+                    }}
+                  >
+                    Sign In &rarr;
+                  </button>
+                </p>
+                <button
+                  type="button"
+                  className="btn-subtle-switch"
+                  onClick={() => {
+                    setMessage("");
+                    setPage("landing");
+                  }}
+                >
+                  &larr; Return to Home
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
+  // ---------------- FORGOT PASSWORD (REAL 3-STEP OTP FLOW) ----------------
 
   if (page === "forgot") {
     return (
@@ -2895,151 +3081,153 @@ function App() {
                 <img src="/dermai-icon.svg" alt="DermAI" className="form-logo-svg" />
                 <span className="form-brand-name">DermAI</span>
               </div>
-              <h1 className="form-title">Reset Your Password</h1>
+              <h1 className="form-title">
+                {otpStep === 1 && "Reset Your Password"}
+                {otpStep === 2 && "Enter Verification Code"}
+                {otpStep === 3 && "Set New Password"}
+              </h1>
               <p className="form-sub">
-                Enter your registered email address below. We'll send you a secure link to reset your password.
+                {otpStep === 1 && "Enter your registered email address to receive a 6-digit verification code."}
+                {otpStep === 2 && `We sent a 6-digit verification code to ${otpEmail}. Code is valid for 10 minutes.`}
+                {otpStep === 3 && "Create a new secure password for your account (minimum 6 characters)."}
               </p>
             </div>
 
-            <form onSubmit={handleForgotPassword} className="login-actual-form">
-              <div className="form-group-custom">
-                <label>Registered Email Address</label>
-                <input
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
+            {/* Step 1: Request OTP */}
+            {otpStep === 1 && (
+              <form onSubmit={handleSendOtp} className="login-actual-form">
+                <div className="form-group-custom">
+                  <label>Registered Email Address</label>
+                  <input
+                    type="email"
+                    placeholder="name@example.com"
+                    value={otpEmail}
+                    onChange={(e) => setOtpEmail(e.target.value)}
+                    required
+                  />
+                </div>
 
-              <button type="submit" className="btn-submit-login" disabled={loading}>
-                {loading ? (
-                  <span className="btn-loading-flex">
-                    <RefreshCw size={18} className="spin-icon" />
-                    Dispatching Link...
-                  </span>
-                ) : (
-                  "Send Password Reset Link →"
-                )}
-              </button>
-            </form>
-
-            {message && (
-              <div className="form-alert-message" role="alert">
-                <Info size={16} />
-                <span>{message}</span>
-              </div>
+                <button type="submit" className="btn-submit-login" disabled={otpLoading}>
+                  {otpLoading ? (
+                    <span className="btn-loading-flex">
+                      <RefreshCw size={18} className="spin-icon" />
+                      Dispatching Code...
+                    </span>
+                  ) : (
+                    "Send Verification Code →"
+                  )}
+                </button>
+              </form>
             )}
 
-            <div className="form-card-footer text-center">
-              <button
-                type="button"
-                className="btn-subtle-switch"
-                onClick={() => {
-                  setMessage("");
-                  setPage("role_select");
-                }}
-              >
-                &larr; Back to Workspace Portals
-              </button>
-            </div>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  // ---------------- RESET PASSWORD PAGE ----------------
-
-  if (page === "reset_password") {
-    return (
-      <main className="dedicated-login-page">
-        <div className="login-split-container single-center">
-          <div className="login-form-card center-card">
-            <div className="form-card-header">
-              <div className="form-brand-row">
-                <img src="/dermai-icon.svg" alt="DermAI" className="form-logo-svg" />
-                <span className="form-brand-name">DermAI</span>
-              </div>
-              <h1 className="form-title">Set New Password</h1>
-              <p className="form-sub">
-                Enter your new secure password for your DermAI account (minimum 6 characters).
-              </p>
-            </div>
-
-            <form onSubmit={handleResetPassword} className="login-actual-form">
-              {!resetToken && (
+            {/* Step 2: Verify OTP */}
+            {otpStep === 2 && (
+              <form onSubmit={handleVerifyOtp} className="login-actual-form">
                 <div className="form-group-custom">
-                  <label>Password Reset Token</label>
+                  <div className="label-action-row">
+                    <label>6-Digit Verification Code</label>
+                    <button
+                      type="button"
+                      className="link-forgot-btn"
+                      disabled={otpCooldown > 0 || otpLoading}
+                      onClick={handleSendOtp}
+                    >
+                      {otpCooldown > 0 ? `Resend in ${otpCooldown}s` : "Resend Code"}
+                    </button>
+                  </div>
                   <input
                     type="text"
-                    placeholder="Paste reset token here"
-                    value={resetToken}
-                    onChange={(e) => setResetToken(e.target.value)}
+                    placeholder="e.g. 123456"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    maxLength={6}
                     required
+                    style={{ letterSpacing: "4px", fontSize: "1.2rem", fontWeight: "700", textAlign: "center" }}
                   />
                 </div>
-              )}
 
-              <div className="form-group-custom">
-                <label>New Password</label>
-                <div className="password-input-wrapper">
-                  <input
-                    type={showResetPassword ? "text" : "password"}
-                    placeholder="Enter new password (min 6 characters)"
-                    value={resetNewPassword}
-                    onChange={(e) => setResetNewPassword(e.target.value)}
-                    minLength={6}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="btn-toggle-eye"
-                    onClick={() => setShowResetPassword(!showResetPassword)}
-                  >
-                    {showResetPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+                <button type="submit" className="btn-submit-login" disabled={otpLoading || otpCode.length !== 6}>
+                  {otpLoading ? (
+                    <span className="btn-loading-flex">
+                      <RefreshCw size={18} className="spin-icon" />
+                      Verifying Code...
+                    </span>
+                  ) : (
+                    "Verify Code →"
+                  )}
+                </button>
+              </form>
+            )}
+
+            {/* Step 3: Set New Password */}
+            {otpStep === 3 && (
+              <form onSubmit={handleResetPasswordOtp} className="login-actual-form">
+                <div className="form-group-custom">
+                  <label>New Password (min 6 chars)</label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showOtpNewPassword ? "text" : "password"}
+                      placeholder="Enter new password"
+                      value={otpNewPassword}
+                      onChange={(e) => setOtpNewPassword(e.target.value)}
+                      minLength={6}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="btn-toggle-eye"
+                      onClick={() => setShowOtpNewPassword(!showOtpNewPassword)}
+                    >
+                      {showOtpNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
+
+                <div className="form-group-custom">
+                  <label>Confirm New Password</label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showOtpConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm new password"
+                      value={otpConfirmPassword}
+                      onChange={(e) => setOtpConfirmPassword(e.target.value)}
+                      minLength={6}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="btn-toggle-eye"
+                      onClick={() => setShowOtpConfirmPassword(!showOtpConfirmPassword)}
+                    >
+                      {showOtpConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                <button type="submit" className="btn-submit-login" disabled={otpLoading}>
+                  {otpLoading ? (
+                    <span className="btn-loading-flex">
+                      <RefreshCw size={18} className="spin-icon" />
+                      Updating Password...
+                    </span>
+                  ) : (
+                    "Reset Password & Sign In →"
+                  )}
+                </button>
+              </form>
+            )}
+
+            {otpMessage && (
+              <div className="form-alert-message success" role="alert" style={{ background: "#f0fdf4", borderColor: "#bbf7d0", color: "#15803d" }}>
+                <CheckCircle2 size={16} />
+                <span>{otpMessage}</span>
               </div>
+            )}
 
-              <div className="form-group-custom">
-                <label>Confirm New Password</label>
-                <div className="password-input-wrapper">
-                  <input
-                    type={showResetPassword ? "text" : "password"}
-                    placeholder="Re-enter new password"
-                    value={resetConfirmPassword}
-                    onChange={(e) => setResetConfirmPassword(e.target.value)}
-                    minLength={6}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="btn-toggle-eye"
-                    onClick={() => setShowResetPassword(!showResetPassword)}
-                  >
-                    {showResetPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              <button type="submit" className="btn-submit-login" disabled={loading}>
-                {loading ? (
-                  <span className="btn-loading-flex">
-                    <RefreshCw size={18} className="spin-icon" />
-                    Updating Password...
-                  </span>
-                ) : (
-                  "Update Password & Sign In →"
-                )}
-              </button>
-            </form>
-
-            {message && (
+            {otpError && (
               <div className="form-alert-message" role="alert">
                 <Info size={16} />
-                <span>{message}</span>
+                <span>{otpError}</span>
               </div>
             )}
 
@@ -3049,10 +3237,22 @@ function App() {
                 className="btn-subtle-switch"
                 onClick={() => {
                   setMessage("");
-                  setPage("role_select");
+                  setOtpError("");
+                  setOtpMessage("");
+                  setPage("login_patient");
                 }}
               >
-                &larr; Back to Workspace Portals
+                &larr; Back to Patient Login
+              </button>
+              <button
+                type="button"
+                className="btn-subtle-switch"
+                onClick={() => {
+                  setMessage("");
+                  setPage("landing");
+                }}
+              >
+                Return to Home &rarr;
               </button>
             </div>
           </div>
