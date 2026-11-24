@@ -1,6 +1,40 @@
 
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
+import {
+  Shield,
+  Activity,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+  AlertTriangle,
+  ArrowRight,
+  Lock,
+  UploadCloud,
+  Camera,
+  FileText,
+  Layers,
+  Cpu,
+  BarChart3,
+  Database,
+  Sparkles,
+  Stethoscope,
+  UserCheck,
+  Search,
+  RefreshCw,
+  ChevronRight,
+  ChevronDown,
+  Info,
+  X,
+  ExternalLink,
+  Menu,
+  HeartPulse,
+  Sliders,
+  Check,
+  User,
+  Users,
+  Award
+} from "lucide-react";
 
 const API_URL = "";
 
@@ -137,8 +171,188 @@ function getReadableError(detail, fallback) {
   return fallback;
 }
 
+
+const DISEASE_DETAILS = {
+  BCC: {
+    code: "BCC",
+    name: "Basal Cell Carcinoma",
+    risk: "High Risk",
+    riskColor: "#ef4444",
+    type: "Malignant Skin Cancer",
+    datasetCount: "845 cases (36.8%)",
+    description: "The most common non-melanoma skin cancer globally. Arises from basal cells of the lower epidermis. Characterized by slow, localized expansion and pearly papules with prominent telangiectasias.",
+    keyFeatures: [
+      "Pearly or translucent rolled borders with central depression",
+      "Arborizing telangiectatic blood vessels visible under illumination",
+      "May ulcerate, bleed, or develop crusting",
+      "Very low metastatic potential but causes significant local tissue damage if untreated"
+    ],
+    triageAction: "Prompt dermatological consultation for biopsy and surgical excision or Mohs micrographic surgery."
+  },
+  MEL: {
+    code: "MEL",
+    name: "Melanoma",
+    risk: "Critical Urgent Risk",
+    riskColor: "#dc2626",
+    type: "Malignant Melanocyte Neoplasm",
+    datasetCount: "52 cases (2.3%) | 97.69% ROC-AUC",
+    description: "The most aggressive cutaneous malignancy, arising from transformed pigment-producing melanocytes. Early diagnosis and prompt excision before deep vertical invasion are vital for survival.",
+    keyFeatures: [
+      "Asymmetry: Two halves of the lesion do not match",
+      "Border: Scalloped, notched, or poorly demarcated borders",
+      "Color: Variegated shades of brown, black, blue, pink, or white",
+      "Diameter & Evolution: Greater than 6mm and changing over time"
+    ],
+    triageAction: "Immediate expedited clinical referral (within 1-2 weeks) and complete diagnostic excisional biopsy."
+  },
+  SCC: {
+    code: "SCC",
+    name: "Squamous Cell Carcinoma",
+    risk: "High Risk",
+    riskColor: "#ea580c",
+    type: "Malignant Epidermal Carcinoma",
+    datasetCount: "192 cases (8.4%)",
+    description: "Second most prevalent skin malignancy, originating from keratinocytes of the epidermis. Often emerges from pre-existing actinic keratoses on chronic sun-damaged skin.",
+    keyFeatures: [
+      "Thick, rough, hyperkeratotic or scaly red plaque",
+      "Crusted central ulceration with elevated indurated borders",
+      "Frequently tender, painful, or bleeds upon minor trauma",
+      "Moderate potential for metastasis to regional lymph nodes"
+    ],
+    triageAction: "Urgent dermatological assessment for complete surgical resection with negative histological margins."
+  },
+  NEV: {
+    code: "NEV",
+    name: "Melanocytic Nevus",
+    risk: "Low Risk",
+    riskColor: "#10b981",
+    type: "Benign Melanocytic Proliferation",
+    datasetCount: "244 cases (10.6%)",
+    description: "Common benign proliferation of melanocytes (moles). Characterized by regular symmetrical architecture, uniform pigmentation, and smooth borders.",
+    keyFeatures: [
+      "Symmetric circular or oval geometry",
+      "Uniform light-to-dark brown pigmentation",
+      "Sharp, well-demarcated peripheral margins",
+      "Stable over time without rapid morphologic alterations"
+    ],
+    triageAction: "Routine self-monitoring and periodic baseline clinical skin examinations."
+  },
+  ACK: {
+    code: "ACK",
+    name: "Actinic Keratosis",
+    risk: "Moderate Risk",
+    riskColor: "#f59e0b",
+    type: "Pre-Cancerous Keratinocytic Dysplasia",
+    datasetCount: "730 cases (31.8%)",
+    description: "Pre-malignant, sun-induced epidermal lesion exhibiting atypical keratinocyte proliferation. Recognized as a precursor lesion that can progress to invasive Squamous Cell Carcinoma if untreated.",
+    keyFeatures: [
+      "Dry, rough, sandpaper-like scaly texture",
+      "Erythematous base on chronically sun-exposed areas (face, scalp, forearms)",
+      "Prickling or burning sensation reported by patients",
+      "Estimated 0.1% to 10% annual transformation rate to invasive SCC"
+    ],
+    triageAction: "Cryotherapy, topical 5-fluorouracil, imiquimod, or photodynamic therapy recommended."
+  },
+  SEK: {
+    code: "SEK",
+    name: "Seborrheic Keratosis",
+    risk: "Low Risk",
+    riskColor: "#059669",
+    type: "Benign Epithelial Tumor",
+    datasetCount: "235 cases (10.2%)",
+    description: "Extremely common benign non-cancerous epithelial skin growth appearing with increasing age. Completely non-malignant with zero transformation risk.",
+    keyFeatures: [
+      "Distinct 'stuck-on' waxy or verrucous appearance",
+      "Color ranges from flesh-toned to tan, brown, or black",
+      "Keratin pseudocysts or follicular plugs visible on surface",
+      "No invasive potential; cosmetic or irritation concern only"
+    ],
+    triageAction: "Benign clinical reassurance. Cryotherapy or curettage if irritated by clothing or friction."
+  }
+};
+
+const WORKFLOW_STEPS = [
+  {
+    step: "01",
+    title: "Image Acquisition",
+    desc: "Capture a close-up photo using a smartphone camera or upload an existing image with standard lighting.",
+    icon: Camera
+  },
+  {
+    step: "02",
+    title: "Quality Verification",
+    desc: "OpenCV algorithms automatically evaluate sharpness (Laplacian variance), illumination, and contrast before analysis.",
+    icon: CheckCircle2
+  },
+  {
+    step: "03",
+    title: "Clinical Metadata Fusion",
+    desc: "Incorporate patient age, anatomical location, lesion itch, bleeding, and elevation to contextualize the analysis.",
+    icon: Sliders
+  },
+  {
+    step: "04",
+    title: "Multimodal Deep Learning",
+    desc: "EfficientNet-B0 extracts 1,280 visual features, fused with 64 metadata dimensions for calibrated probability scoring.",
+    icon: Cpu
+  },
+  {
+    step: "05",
+    title: "Grad-CAM Heatmaps",
+    desc: "Gradient-weighted Class Activation Mapping highlights the exact lesion regions that influenced the model's decision.",
+    icon: Eye
+  },
+  {
+    step: "06",
+    title: "Triage & Clinical Report",
+    desc: "The system assigns a risk level (Low, Moderate, High, Urgent), suggests clinical guidelines, and exports a signed report.",
+    icon: FileText
+  }
+];
+
+const TECH_STACK = [
+  { name: "React 19 & Vite", role: "Frontend Engine", desc: "Ultra-fast client interface with responsive component architecture", icon: Activity },
+  { name: "FastAPI & Python 3.11", role: "Backend API", desc: "High-performance asynchronous REST endpoints with Pydantic validation", icon: Cpu },
+  { name: "PyTorch & EfficientNet-B0", role: "Deep Learning", desc: "Compound-scaled multimodal CNN pretrained on ImageNet and fine-tuned on PAD-UFES-20", icon: BrainCircuit },
+  { name: "OpenCV & PIL", role: "Computer Vision", desc: "Automated image sharpness, illumination, contrast gating, and preprocessing", icon: Eye },
+  { name: "Grad-CAM", role: "Explainable AI", desc: "Layer-wise activation gradient visualization for diagnostic transparency", icon: Sparkles },
+  { name: "PostgreSQL & Psycopg 3", role: "Database", desc: "Relational persistence with secure password hashing and role-based permissions", icon: Database },
+  { name: "Docker & Containerization", role: "Deployment", desc: "Isolated, reproducible multi-stage Docker build deployed on Render cloud", icon: Layers },
+  { name: "Brevo HTTPS API", role: "Email Notifications", desc: "Port 443 encrypted transactional email delivery for clinical alerts and password resets", icon: Shield }
+];
+
+const MODEL_METRICS = [
+  { label: "Training Accuracy", value: "98.07%", note: "Patient-grouped partitioned training", color: "#0d9488" },
+  { label: "Validation Accuracy", value: "77.55%", note: "Unbiased checkpoint evaluation", color: "#0284c7" },
+  { label: "Test Accuracy", value: "76.74%", note: "Held-out test set evaluation", color: "#6366f1" },
+  { label: "Macro Precision", value: "73.51%", note: "Across all 6 disease classes", color: "#8b5cf6" },
+  { label: "Macro Recall", value: "70.47%", note: "Superior sensitivity on malignancies", color: "#ec4899" },
+  { label: "Macro F1-Score", value: "71.86%", note: "Harmonic mean of precision & recall", color: "#10b981" },
+  { label: "Macro ROC-AUC", value: "90.31%", note: "Multi-class discriminative capacity", color: "#f59e0b" },
+  { label: "Melanoma ROC-AUC", value: "97.69%", note: "Exceptional malignant detection", color: "#ef4444" }
+];
+
 function App() {
-  const [page, setPage] = useState("login");
+  const [page, setPage] = useState("landing");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [resetToken, setResetToken] = useState("");
+  const [resetNewPassword, setResetNewPassword] = useState("");
+  const [resetConfirmPassword, setResetConfirmPassword] = useState("");
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [activeDiseaseModal, setActiveDiseaseModal] = useState(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get("reset_token");
+    if (tokenFromUrl) {
+      setResetToken(tokenFromUrl);
+      setPage("reset_password");
+    }
+  }, []);
+
   const [user, setUser] = useState(null);
   const [token, setToken] = useState("");
   const [activePage, setActivePage] = useState("Dashboard");
@@ -605,16 +819,27 @@ function App() {
 
   // ---------------- AUTHENTICATION ----------------
 
-  async function handleLogin(event) {
-    event.preventDefault();
+  async function handleLogin(event, portalRoleOverride) {
+    if (event && event.preventDefault) event.preventDefault();
     setLoading(true);
     setMessage("");
 
+    const effectiveRole = portalRoleOverride || (
+      page === "login_patient" ? "patient" :
+      page === "login_clinician" ? "clinician" :
+      page === "login_admin" ? "admin" : null
+    );
+
     try {
+      const payload = { email: email.trim(), password };
+      if (effectiveRole) {
+        payload.portal_role = effectiveRole;
+      }
+
       const response = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -751,12 +976,88 @@ function App() {
     }
   }
 
+  // ---------------- FORGOT & RESET PASSWORD ----------------
+
+  async function handleForgotPassword(event) {
+    if (event && event.preventDefault) event.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const response = await fetch(`${API_URL}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || "Password reset request failed.");
+      }
+      setMessage(data.message || "If an account matches this email, reset instructions have been sent.");
+    } catch (err) {
+      setMessage(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleResetPassword(event) {
+    if (event && event.preventDefault) event.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    if (!resetToken.trim()) {
+      setMessage("Reset token is required.");
+      setLoading(false);
+      return;
+    }
+
+    if (resetNewPassword.length < 6) {
+      setMessage("New password must be at least 6 characters.");
+      setLoading(false);
+      return;
+    }
+
+    if (resetNewPassword !== resetConfirmPassword) {
+      setMessage("Passwords do not match.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: resetToken.trim(),
+          new_password: resetNewPassword,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || "Password reset failed.");
+      }
+
+      setMessage("Password successfully reset! Please sign in with your new credentials.");
+      setResetNewPassword("");
+      setResetConfirmPassword("");
+      setResetToken("");
+      setPage("login_patient");
+    } catch (err) {
+      setMessage(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   // ---------------- SIGN OUT ----------------
 
   function handleSignOut() {
     setToken("");
     setUser(null);
-    setPage("login");
+    setPage("landing");
     setActivePage("Dashboard");
     setPassword("");
     setConfirmPassword("");
@@ -1272,92 +1573,992 @@ function App() {
     ],
   };
 
-  // ---------------- LOGIN PAGE ----------------
+  // ---------------- PUBLIC LANDING PAGE ----------------
 
-  if (page === "login") {
+  if (page === "landing") {
     return (
-      <main className="login-page">
-        <section className="login-card">
-          <div className="login-header">
-            <div className="login-status-tag">
-              <span className="live-pulse"></span>
-              <span>Secure Clinical Workspace</span>
+      <div className="landing-wrapper">
+        {/* Sticky Navigation Bar */}
+        <header className="landing-nav">
+          <div className="landing-nav-container">
+            <div className="landing-brand" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+              <img src="/dermai-icon.svg" alt="DermAI Logo" className="brand-logo-nav" />
+              <div className="brand-name-group">
+                <span className="brand-name-main">DermAI</span>
+                <span className="brand-badge-nav">CLINICAL AI</span>
+              </div>
             </div>
 
-            <div className="logo hero-logo">D</div>
+            <nav className="landing-nav-links desktop-only">
+              <a href="#hero">Home</a>
+              <a href="#about">About Project</a>
+              <a href="#technology">Technology</a>
+              <a href="#dataset">Dataset</a>
+              <a href="#diseases">Diseases</a>
+              <a href="#how-it-works">How It Works</a>
+              <a href="#performance">Performance</a>
+            </nav>
 
-            <h1>Sign In to DermAI</h1>
-
-            <p className="subtitle">
-              Multimodal Skin Disease Screening & Decision Support
-            </p>
+            <div className="landing-nav-actions">
+              <button
+                type="button"
+                className="nav-btn-subtle"
+                onClick={() => {
+                  setMessage("");
+                  setPage("role_select");
+                }}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                className="nav-btn-primary"
+                onClick={() => {
+                  setMessage("");
+                  setPage("role_select");
+                }}
+              >
+                Get Started <ArrowRight size={15} />
+              </button>
+              <button
+                type="button"
+                className="mobile-nav-toggle"
+                onClick={() => setMobileNavOpen(!mobileNavOpen)}
+                aria-label="Toggle navigation"
+              >
+                {mobileNavOpen ? <X size={22} /> : <Menu size={22} />}
+              </button>
+            </div>
           </div>
 
-          <form onSubmit={handleLogin} className="login-form">
-            <div className="form-group-login">
-              <label>Email Address</label>
-              <input
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group-login">
-              <div className="label-with-action">
-                <label>Password</label>
+          {/* Mobile Navigation Drawer */}
+          {mobileNavOpen && (
+            <div className="mobile-nav-drawer">
+              <a href="#hero" onClick={() => setMobileNavOpen(false)}>Home</a>
+              <a href="#about" onClick={() => setMobileNavOpen(false)}>About Project</a>
+              <a href="#technology" onClick={() => setMobileNavOpen(false)}>Technology</a>
+              <a href="#dataset" onClick={() => setMobileNavOpen(false)}>Dataset</a>
+              <a href="#diseases" onClick={() => setMobileNavOpen(false)}>Diseases</a>
+              <a href="#how-it-works" onClick={() => setMobileNavOpen(false)}>How It Works</a>
+              <a href="#performance" onClick={() => setMobileNavOpen(false)}>Performance</a>
+              <div className="mobile-drawer-actions">
                 <button
                   type="button"
-                  className="text-button-subtle"
+                  className="nav-btn-subtle w-full"
                   onClick={() => {
+                    setMobileNavOpen(false);
                     setMessage("");
-                    setPage("forgot");
+                    setPage("role_select");
                   }}
                 >
-                  Forgot password?
+                  Sign In to Workspace
+                </button>
+                <button
+                  type="button"
+                  className="nav-btn-primary w-full"
+                  onClick={() => {
+                    setMobileNavOpen(false);
+                    setMessage("");
+                    setPage("role_select");
+                  }}
+                >
+                  Get Started <ArrowRight size={15} />
+                </button>
+              </div>
+            </div>
+          )}
+        </header>
+
+        {/* Hero Section */}
+        <section id="hero" className="landing-hero-section">
+          <div className="landing-hero-container">
+            <div className="hero-text-col">
+              <div className="hero-pill-badge">
+                <Sparkles size={14} className="sparkle-svg" />
+                <span>Deep Learning & Explainable AI Screening</span>
+              </div>
+
+              <h1 className="hero-main-heading">
+                Smarter Skin Analysis.{" "}
+                <span className="hero-gradient-span">
+                  Powered by Artificial Intelligence.
+                </span>
+              </h1>
+
+              <p className="hero-subheading-text">
+                An AI-powered skin image analysis platform designed to assist preliminary skin disease screening through deep learning and explainable AI.
+              </p>
+
+              <div className="hero-cta-group">
+                <button
+                  type="button"
+                  className="btn-hero-solid"
+                  onClick={() => {
+                    setMessage("");
+                    setPage("role_select");
+                  }}
+                >
+                  Get Started <ArrowRight size={18} />
+                </button>
+                <button
+                  type="button"
+                  className="btn-hero-outline"
+                  onClick={() => {
+                    const el = document.getElementById("about");
+                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                  }}
+                >
+                  Explore DermAI <ChevronDown size={18} />
                 </button>
               </div>
 
-              <input
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              {/* Trust & Performance Highlights */}
+              <div className="hero-trust-bar">
+                <div className="trust-item">
+                  <strong>98.07%</strong>
+                  <span>Train Accuracy</span>
+                </div>
+                <div className="trust-divider" />
+                <div className="trust-item">
+                  <strong>97.69%</strong>
+                  <span>Melanoma ROC-AUC</span>
+                </div>
+                <div className="trust-divider" />
+                <div className="trust-item">
+                  <strong>6 Classes</strong>
+                  <span>PAD-UFES-20 Benchmark</span>
+                </div>
+                <div className="trust-divider" />
+                <div className="trust-item">
+                  <strong>Grad-CAM</strong>
+                  <span>Explainable Heatmaps</span>
+                </div>
+              </div>
             </div>
 
-            <button type="submit" className="btn-login-submit" disabled={loading}>
-              {loading ? "Verifying Credentials..." : "Sign In to Workspace →"}
-            </button>
-          </form>
+            {/* Right Visual AI Scanner Mockup */}
+            <div className="hero-visual-col">
+              <div className="scanner-glass-card">
+                <div className="scanner-header-bar">
+                  <div className="traffic-dots">
+                    <span className="dot red" />
+                    <span className="dot yellow" />
+                    <span className="dot green" />
+                  </div>
+                  <div className="scanner-title-hud">
+                    <Activity size={14} className="hud-pulse-icon" />
+                    <span>DermAI Multimodal Inference Engine &bull; LIVE</span>
+                  </div>
+                  <span className="hud-status-badge">PASS</span>
+                </div>
 
-          {message && (
-            <p className="upload-note" role="alert">{message}</p>
-          )}
+                <div className="scanner-viewport-box">
+                  <div className="scanner-grid-bg" />
+                  <div className="scanner-laser-beam" />
+                  
+                  {/* Lesion Silhouette / Visual Simulation */}
+                  <div className="scanner-lesion-sim">
+                    <div className="sim-lesion-body" />
+                    <div className="sim-bounding-box">
+                      <span className="corner top-left" />
+                      <span className="corner top-right" />
+                      <span className="corner bottom-left" />
+                      <span className="corner bottom-right" />
+                      <span className="box-label">ROI: 99.2% Conf</span>
+                    </div>
+                  </div>
 
-          <div className="login-footer">
-            <p className="auth-switch">
-              Don't have an account?{" "}
-              <button
-                type="button"
-                className="text-button-highlight"
-                onClick={() => {
-                  setMessage("");
-                  setPage("register");
-                }}
-              >
-                Create Account →
-              </button>
-            </p>
+                  {/* Realtime Detection Banner */}
+                  <div className="scanner-detection-banner">
+                    <div className="detect-col">
+                      <span className="detect-caption">PREDICTED CLASS</span>
+                      <strong className="detect-name">Melanocytic Nevus (NEV)</strong>
+                    </div>
+                    <div className="detect-badge-pill green">
+                      <span>Low Risk &bull; Benign</span>
+                    </div>
+                  </div>
+                </div>
 
-            <div className="login-security-badge">
-              <span>🔒 Encrypted Patient Data & ISO-Aligned Inference</span>
+                <div className="scanner-hud-footer">
+                  <div className="hud-metric">
+                    <span className="hud-label">Image Sharpness</span>
+                    <strong className="hud-val text-teal">Passed (142.6)</strong>
+                  </div>
+                  <div className="hud-metric">
+                    <span className="hud-label">Architecture</span>
+                    <strong className="hud-val">EfficientNet-B0</strong>
+                  </div>
+                  <div className="hud-metric">
+                    <span className="hud-label">Inference Time</span>
+                    <strong className="hud-val">34.09 ms</strong>
+                  </div>
+                  <div className="hud-metric">
+                    <span className="hud-label">Attention Layer</span>
+                    <strong className="hud-val text-teal">Grad-CAM MBConv6</strong>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
+
+        {/* About DermAI Section */}
+        <section id="about" className="landing-section-wrap bg-light">
+          <div className="landing-container">
+            <div className="section-header-center">
+              <span className="section-eyebrow">ABOUT DERMAI</span>
+              <h2 className="section-title">Bridging Mobile Imaging and Dermatological Decision Support</h2>
+              <p className="section-desc">
+                DermAI is a deep learning-based skin disease analysis platform that analyzes uploaded or captured skin images and provides predicted classifications alongside explainable AI visualizations. It leverages multimodal clinical feature fusion and pre-inference image quality gating to ensure diagnostic accuracy and clinical reliability.
+              </p>
+            </div>
+
+            <div className="about-cards-grid">
+              <div className="about-feature-card">
+                <div className="feature-icon-wrapper teal">
+                  <BrainCircuit size={28} />
+                </div>
+                <h3>AI-Powered Multimodal Analysis</h3>
+                <p>
+                  Combines EfficientNet-B0 visual representations with 64 patient clinical metadata dimensions (age, anatomical site, lesion itch, bleeding, elevation, and growth) for holistic diagnostic reasoning.
+                </p>
+                <ul className="feature-bullet-list">
+                  <li><Check size={16} /> 1,280 deep CNN visual features</li>
+                  <li><Check size={16} /> Patient-reported clinical risk indicators</li>
+                  <li><Check size={16} /> Calibrated probability outputs across 6 classes</li>
+                </ul>
+              </div>
+
+              <div className="about-feature-card">
+                <div className="feature-icon-wrapper blue">
+                  <Eye size={28} />
+                </div>
+                <h3>Image Quality Pre-Assessment</h3>
+                <p>
+                  Real-time OpenCV validation pipeline testing sharpness (Laplacian variance), illumination range, and contrast before AI inference to prevent misdiagnosis.
+                </p>
+                <ul className="feature-bullet-list">
+                  <li><Check size={16} /> Blurriness & motion blur detection</li>
+                  <li><Check size={16} /> Low-light and over-exposure filtering</li>
+                  <li><Check size={16} /> Immediate guidance for photo retake</li>
+                </ul>
+              </div>
+
+              <div className="about-feature-card">
+                <div className="feature-icon-wrapper indigo">
+                  <Sparkles size={28} />
+                </div>
+                <h3>Explainable AI (Grad-CAM)</h3>
+                <p>
+                  Transparent visual attention heatmaps pinpointing the exact lesion pixels and morphological borders that drove the neural network's classification.
+                </p>
+                <ul className="feature-bullet-list">
+                  <li><Check size={16} /> High-resolution saliency overlays</li>
+                  <li><Check size={16} /> Clinically interpretable lesion boundaries</li>
+                  <li><Check size={16} /> Eliminates black-box AI opacity</li>
+                </ul>
+              </div>
+
+              <div className="about-feature-card">
+                <div className="feature-icon-wrapper emerald">
+                  <Stethoscope size={28} />
+                </div>
+                <h3>Clinical Decision Support</h3>
+                <p>
+                  Prioritized triage categorization (Low, Moderate, High, Urgent), evidence-based dermatological clinical protocols, and automated report delivery.
+                </p>
+                <ul className="feature-bullet-list">
+                  <li><Check size={16} /> Risk-stratified triage guidance</li>
+                  <li><Check size={16} /> Exportable signed PDF clinical reports</li>
+                  <li><Check size={16} /> Automated clinician alert notifications</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Dataset Section */}
+        <section id="dataset" className="landing-section-wrap">
+          <div className="landing-container">
+            <div className="section-header-center">
+              <span className="section-eyebrow">CLINICAL DATASET</span>
+              <h2 className="section-title">Trained on the PAD-UFES-20 Dermatological Benchmark</h2>
+              <p className="section-desc">
+                Collected by the Federal University of Espírito Santo (UFES), PAD-UFES-20 reflects real-world clinical conditions. Unlike sanitized dermoscopic datasets, it uses smartphone cameras across diverse patient demographics, providing robust real-world generalization.
+              </p>
+            </div>
+
+            <div className="dataset-stats-strip">
+              <div className="dataset-stat-box">
+                <span className="dataset-stat-number">2,298</span>
+                <span className="dataset-stat-label">Clinical Smartphone Images</span>
+                <span className="dataset-stat-sub">High-resolution mobile captures</span>
+              </div>
+              <div className="dataset-stat-box">
+                <span className="dataset-stat-number">1,373</span>
+                <span className="dataset-stat-label">Unique Patients</span>
+                <span className="dataset-stat-sub">Real dermatological clinic visits</span>
+              </div>
+              <div className="dataset-stat-box">
+                <span className="dataset-stat-number">6</span>
+                <span className="dataset-stat-label">Disease Categories</span>
+                <span className="dataset-stat-sub">Malignant, premalignant & benign</span>
+              </div>
+              <div className="dataset-stat-box">
+                <span className="dataset-stat-number">Patient-Wise</span>
+                <span className="dataset-stat-label">Grouped Partitioning</span>
+                <span className="dataset-stat-sub">Zero data leakage across train/val/test</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Diseases Section */}
+        <section id="diseases" className="landing-section-wrap bg-light">
+          <div className="landing-container">
+            <div className="section-header-center">
+              <span className="section-eyebrow">PATHOLOGY TAXONOMY</span>
+              <h2 className="section-title">6 Skin Diseases Analyzed by DermAI</h2>
+              <p className="section-desc">
+                Click any condition to view detailed clinical characteristics, typical morphological features, malignancy risk, and recommended triage protocol.
+              </p>
+            </div>
+
+            <div className="diseases-grid">
+              {Object.entries(DISEASE_DETAILS).map(([code, dis]) => (
+                <div
+                  key={code}
+                  className="disease-card"
+                  onClick={() => setActiveDiseaseModal(dis)}
+                >
+                  <div className="disease-card-header">
+                    <span className="disease-code-pill" style={{ borderColor: dis.riskColor, color: dis.riskColor }}>
+                      {dis.code}
+                    </span>
+                    <span className="disease-risk-tag" style={{ backgroundColor: `${dis.riskColor}18`, color: dis.riskColor }}>
+                      {dis.risk}
+                    </span>
+                  </div>
+
+                  <h3 className="disease-title">{dis.name}</h3>
+                  <p className="disease-type-sub">{dis.type}</p>
+                  <p className="disease-brief-desc">{dis.description.substring(0, 115)}...</p>
+
+                  <div className="disease-card-footer">
+                    <span className="dataset-freq-badge">{dis.datasetCount}</span>
+                    <button type="button" className="disease-detail-link">
+                      View Details &rarr;
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Interactive Disease Modal */}
+        {activeDiseaseModal && (
+          <div className="modal-backdrop-blur" onClick={() => setActiveDiseaseModal(null)}>
+            <div className="disease-modal-card" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header-row">
+                <div className="modal-title-wrap">
+                  <div className="modal-code-badge" style={{ backgroundColor: `${activeDiseaseModal.riskColor}20`, color: activeDiseaseModal.riskColor }}>
+                    {activeDiseaseModal.code}
+                  </div>
+                  <div>
+                    <h2 className="modal-disease-name">{activeDiseaseModal.name}</h2>
+                    <span className="modal-disease-type">{activeDiseaseModal.type}</span>
+                  </div>
+                </div>
+                <button type="button" className="modal-close-x" onClick={() => setActiveDiseaseModal(null)}>
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="modal-body-scroll">
+                <div className="modal-risk-banner" style={{ borderLeftColor: activeDiseaseModal.riskColor }}>
+                  <AlertTriangle size={18} style={{ color: activeDiseaseModal.riskColor }} />
+                  <div>
+                    <strong>Malignancy Classification: {activeDiseaseModal.risk}</strong>
+                    <p>Dataset Representation: {activeDiseaseModal.datasetCount}</p>
+                  </div>
+                </div>
+
+                <div className="modal-desc-box">
+                  <h4>Clinical Overview</h4>
+                  <p>{activeDiseaseModal.description}</p>
+                </div>
+
+                <div className="modal-features-box">
+                  <h4>Diagnostic Hallmarks & Morphological Criteria</h4>
+                  <ul>
+                    {activeDiseaseModal.keyFeatures.map((feat, idx) => (
+                      <li key={idx}><Check size={16} /> <span>{feat}</span></li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="modal-triage-box">
+                  <h4>Recommended Triage Protocol</h4>
+                  <p>{activeDiseaseModal.triageAction}</p>
+                </div>
+              </div>
+
+              <div className="modal-footer-row">
+                <button type="button" className="btn-modal-close" onClick={() => setActiveDiseaseModal(null)}>
+                  Close Overview
+                </button>
+                <button
+                  type="button"
+                  className="btn-modal-screen"
+                  onClick={() => {
+                    setActiveDiseaseModal(null);
+                    setPage("role_select");
+                  }}
+                >
+                  Start Screening Now &rarr;
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* How It Works Section */}
+        <section id="how-it-works" className="landing-section-wrap">
+          <div className="landing-container">
+            <div className="section-header-center">
+              <span className="section-eyebrow">WORKFLOW</span>
+              <h2 className="section-title">How DermAI Works</h2>
+              <p className="section-desc">
+                From mobile photograph capture to clinical decision support in 6 transparent, verified steps.
+              </p>
+            </div>
+
+            <div className="workflow-steps-grid">
+              {WORKFLOW_STEPS.map((wf, idx) => {
+                const IconComponent = wf.icon;
+                return (
+                  <div key={idx} className="workflow-card">
+                    <div className="workflow-card-top">
+                      <span className="workflow-step-num">{wf.step}</span>
+                      <div className="workflow-icon-box">
+                        <IconComponent size={22} />
+                      </div>
+                    </div>
+                    <h3>{wf.title}</h3>
+                    <p>{wf.desc}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Technology Stack Section */}
+        <section id="technology" className="landing-section-wrap bg-light">
+          <div className="landing-container">
+            <div className="section-header-center">
+              <span className="section-eyebrow">ARCHITECTURE</span>
+              <h2 className="section-title">State-of-the-Art Technology Stack</h2>
+              <p className="section-desc">
+                Engineered for speed, clinical accuracy, model explainability, and enterprise-grade medical data security.
+              </p>
+            </div>
+
+            <div className="tech-stack-grid">
+              {TECH_STACK.map((item, idx) => {
+                const TechIcon = item.icon;
+                return (
+                  <div key={idx} className="tech-item-card">
+                    <div className="tech-icon-wrap">
+                      <TechIcon size={24} />
+                    </div>
+                    <div>
+                      <span className="tech-role-badge">{item.role}</span>
+                      <h4 className="tech-name">{item.name}</h4>
+                      <p className="tech-desc">{item.desc}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Model Performance Section */}
+        <section id="performance" className="landing-section-wrap">
+          <div className="landing-container">
+            <div className="section-header-center">
+              <span className="section-eyebrow">EVALUATION BENCHMARK</span>
+              <h2 className="section-title">Verified Model Performance</h2>
+              <p className="section-desc">
+                Quantitative performance metrics evaluated on the held-out test split of PAD-UFES-20.
+              </p>
+            </div>
+
+            <div className="metrics-cards-grid">
+              {MODEL_METRICS.map((met, idx) => (
+                <div key={idx} className="metric-score-card">
+                  <span className="metric-score-label">{met.label}</span>
+                  <span className="metric-score-value" style={{ color: met.color }}>{met.value}</span>
+                  <span className="metric-score-note">{met.note}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="architecture-justification-banner">
+              <div className="justification-header">
+                <Award size={20} className="award-icon" />
+                <h4>Production Selection: EfficientNet-B0 Compound Scaling</h4>
+              </div>
+              <p>
+                While ResNet50 achieved 77.83% accuracy, its recall on malignant classes was only 64.13%. EfficientNet-B0 was selected for production because of its superior <strong>70.47% Macro Recall</strong>, <strong>97.69% Melanoma ROC-AUC</strong>, and rapid <strong>34.09 ms inference latency</strong>, making it the most clinically sensitive model for urgent malignant lesions.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer id="contact" className="landing-footer">
+          <div className="landing-container">
+            <div className="footer-top-grid">
+              <div className="footer-brand-col">
+                <div className="footer-brand-row">
+                  <img src="/dermai-icon.svg" alt="DermAI Icon" className="footer-logo-svg" />
+                  <span className="footer-brand-title">DermAI</span>
+                </div>
+                <p className="footer-mission-text">
+                  Advanced multimodal skin disease screening powered by compound-scaled deep learning and explainable AI.
+                </p>
+                <div className="footer-compliance-badges">
+                  <span>PAD-UFES-20 Benchmarked</span>
+                  <span>ISO-Aligned Architecture</span>
+                </div>
+              </div>
+
+              <div className="footer-nav-col">
+                <h4>Navigation</h4>
+                <a href="#hero">Home</a>
+                <a href="#about">About Project</a>
+                <a href="#technology">Technology</a>
+                <a href="#dataset">Dataset</a>
+                <a href="#diseases">Diseases</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#performance">Performance</a>
+              </div>
+
+              <div className="footer-portals-col">
+                <h4>Clinical Portals</h4>
+                <button type="button" onClick={() => { setMessage(""); setPage("login_patient"); }}>Patient Portal</button>
+                <button type="button" onClick={() => { setMessage(""); setPage("login_clinician"); }}>Clinician Portal</button>
+                <button type="button" onClick={() => { setMessage(""); setPage("login_admin"); }}>Administrator Portal</button>
+                <button type="button" onClick={() => { setMessage(""); setPage("role_select"); }}>Portal Selection</button>
+              </div>
+
+              <div className="footer-contact-col">
+                <h4>Platform & Support</h4>
+                <p>Support: <a href="mailto:dermai.diagnostics@gmail.com">dermai.diagnostics@gmail.com</a></p>
+                <p>Deployment: Docker Container on Render Cloud</p>
+                <p>API Status: Operational (PostgreSQL + PyTorch)</p>
+              </div>
+            </div>
+
+            {/* Medical Disclaimer Banner */}
+            <div className="footer-medical-disclaimer">
+              <div className="disclaimer-header">
+                <AlertTriangle size={18} />
+                <strong>CLINICAL & REGULATORY MEDICAL DISCLAIMER</strong>
+              </div>
+              <p>
+                DermAI is an artificial intelligence-assisted diagnostic screening tool intended for preliminary screening, educational research, and clinical decision support. DermAI is not an autonomous medical device and does not provide definitive medical diagnoses. All outputs, including predictions, risk stratifications, and Grad-CAM saliency visualizations, must be verified by a licensed healthcare professional, dermatologist, or pathologist before initiating clinical interventions.
+              </p>
+            </div>
+
+            <div className="footer-bottom-row">
+              <p>&copy; {new Date().getFullYear()} DermAI Platform. All rights reserved.</p>
+              <div className="footer-links-row">
+                <span>Privacy Protocol</span>
+                <span>&bull;</span>
+                <span>Terms of Medical Use</span>
+                <span>&bull;</span>
+                <span>Model Card & Benchmarks</span>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  // ---------------- ROLE SELECTION PORTAL ----------------
+
+  if (page === "role_select") {
+    return (
+      <main className="role-portal-page">
+        <div className="role-portal-container">
+          <div className="role-portal-header">
+            <div className="landing-brand-center" onClick={() => setPage("landing")}>
+              <img src="/dermai-icon.svg" alt="DermAI" className="role-logo-img" />
+              <div className="brand-name-group">
+                <span className="brand-name-main">DermAI</span>
+                <span className="brand-badge-nav">CLINICAL SUITE</span>
+              </div>
+            </div>
+
+            <h1 className="role-portal-title">Select Your Workspace Portal</h1>
+            <p className="role-portal-sub">
+              Choose the portal tailored to your role in the dermatological screening workflow:
+            </p>
+          </div>
+
+          <div className="role-cards-container">
+            {/* Patient Portal Card */}
+            <div
+              className="role-selection-card patient"
+              onClick={() => {
+                setMessage("");
+                setPage("login_patient");
+              }}
+            >
+              <div className="role-card-badge patient">Patient Care</div>
+              <div className="role-icon-box patient">
+                <HeartPulse size={36} />
+              </div>
+              <h2 className="role-title">Patient Portal</h2>
+              <p className="role-desc">
+                Submit smartphone photographs of skin lesions, receive immediate automated quality validation, view preliminary AI predictions, and track your screening records.
+              </p>
+              <ul className="role-feature-bullets">
+                <li><Check size={16} /> Instant photo upload & quality check</li>
+                <li><Check size={16} /> Multimodal AI screening results</li>
+                <li><Check size={16} /> Personal dermatological history records</li>
+              </ul>
+              <button
+                type="button"
+                className="btn-enter-portal patient"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMessage("");
+                  setPage("login_patient");
+                }}
+              >
+                Enter Patient Portal &rarr;
+              </button>
+            </div>
+
+            {/* Clinician Portal Card */}
+            <div
+              className="role-selection-card clinician"
+              onClick={() => {
+                setMessage("");
+                setPage("login_clinician");
+              }}
+            >
+              <div className="role-card-badge clinician">Medical Professional</div>
+              <div className="role-icon-box clinician">
+                <Stethoscope size={36} />
+              </div>
+              <h2 className="role-title">Clinician Portal</h2>
+              <p className="role-desc">
+                Access patient triage queues, examine dual-view Grad-CAM explainability heatmaps, verify diagnostic findings, submit clinical notes, and export verified PDF reports.
+              </p>
+              <ul className="role-feature-bullets">
+                <li><Check size={16} /> Risk-prioritized triage queue</li>
+                <li><Check size={16} /> Grad-CAM attention heatmaps</li>
+                <li><Check size={16} /> One-click review approval & email alerts</li>
+              </ul>
+              <button
+                type="button"
+                className="btn-enter-portal clinician"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMessage("");
+                  setPage("login_clinician");
+                }}
+              >
+                Enter Clinician Portal &rarr;
+              </button>
+            </div>
+
+            {/* Administrator Portal Card */}
+            <div
+              className="role-selection-card admin"
+              onClick={() => {
+                setMessage("");
+                setPage("login_admin");
+              }}
+            >
+              <div className="role-card-badge admin">System Governance</div>
+              <div className="role-icon-box admin">
+                <Shield size={36} />
+              </div>
+              <h2 className="role-title">Administrator Portal</h2>
+              <p className="role-desc">
+                Oversee medical staff credentials, approve new clinician registrations, monitor database connection telemetry, and inspect real-time AI inference performance.
+              </p>
+              <ul className="role-feature-bullets">
+                <li><Check size={16} /> Clinician approval & credentialing</li>
+                <li><Check size={16} /> Database audit logs & user management</li>
+                <li><Check size={16} /> Model latency & memory telemetry</li>
+              </ul>
+              <button
+                type="button"
+                className="btn-enter-portal admin"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMessage("");
+                  setPage("login_admin");
+                }}
+              >
+                Enter Admin Portal &rarr;
+              </button>
+            </div>
+          </div>
+
+          <div className="role-portal-bottom-action">
+            <button
+              type="button"
+              className="btn-back-home"
+              onClick={() => {
+                setMessage("");
+                setPage("landing");
+              }}
+            >
+              &larr; Return to Public Landing Page
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ---------------- DEDICATED ROLE LOGIN PAGES ----------------
+
+  if (page === "login_patient" || page === "login_clinician" || page === "login_admin" || page === "login") {
+    const portalRole =
+      page === "login_clinician" ? "clinician" :
+      page === "login_admin" ? "admin" : "patient";
+
+    const portalConfig = {
+      patient: {
+        title: "Patient Portal",
+        badge: "Patient Self-Screening Workspace",
+        subtitle: "Sign in to access your screening history and submit new lesion images",
+        heroTagline: "Personal Dermatological Care & Screening",
+        heroDesc: "Submit skin photographs directly from your smartphone, review automated preliminary diagnostic assessments, and securely track your personal health history.",
+        bullets: [
+          "Instant image quality validation (sharpness & illumination)",
+          "Multimodal AI classification across 6 lesion types",
+          "Grad-CAM explainable attention heatmap visualizations",
+          "Encrypted medical history and clinical tracking"
+        ],
+        switchText: "Don't have a patient account?",
+        switchAction: "Create Patient Account &rarr;",
+        onSwitch: () => {
+          setRole("user");
+          setMessage("");
+          setPage("register");
+        }
+      },
+      clinician: {
+        title: "Clinician Portal",
+        badge: "Diagnostic Review & Decision Support",
+        subtitle: "Sign in to examine triage queues and approve diagnostic reports",
+        heroTagline: "Clinical Decision Support & Verification",
+        heroDesc: "Access prioritized patient screening queues, examine Grad-CAM explainability saliency maps, verify preliminary diagnoses, and dispatch authenticated clinical reports.",
+        bullets: [
+          "Prioritized triage queue by malignancy risk level",
+          "Dual-view Grad-CAM heatmaps & overlay comparisons",
+          "PAD-UFES-20 model performance telemetry & benchmarks",
+          "One-click clinical report verification and email alert dispatch"
+        ],
+        switchText: "New medical clinician?",
+        switchAction: "Register for Staff Credentialing &rarr;",
+        onSwitch: () => {
+          setRole("clinician");
+          setMessage("");
+          setPage("register");
+        }
+      },
+      admin: {
+        title: "Administrator Portal",
+        badge: "Platform Governance & Security",
+        subtitle: "Sign in to manage clinician credentials and system audits",
+        heroTagline: "Platform Security & Diagnostic Telemetry",
+        heroDesc: "Oversee platform health, approve medical staff accounts, monitor model inference latency, and inspect database audit logs with strict role-based controls.",
+        bullets: [
+          "Clinician credentialing and account approval workflow",
+          "Live PostgreSQL database connection telemetry",
+          "Model latency tracking & hardware allocation metrics",
+          "Role-based access control and session encryption"
+        ],
+        switchText: "Need administrative assistance?",
+        switchAction: "Contact Technical Operations",
+        onSwitch: () => {
+          setMessage("Default Administrator credentials: admin@dermai.com / Admin@123");
+        }
+      }
+    }[portalRole];
+
+    return (
+      <main className="dedicated-login-page">
+        <div className="login-split-container">
+          {/* Left Hero Column */}
+          <section className={`login-hero-col ${portalRole}`}>
+            <div className="login-hero-content">
+              <div className="login-hero-brand" onClick={() => setPage("landing")}>
+                <img src="/dermai-icon.svg" alt="DermAI" className="hero-brand-svg" />
+                <div className="brand-name-group">
+                  <span className="brand-name-main text-white">DermAI</span>
+                  <span className="brand-badge-hero">{portalRole.toUpperCase()}</span>
+                </div>
+              </div>
+
+              <div className="login-hero-text-block">
+                <span className="login-hero-pill">{portalConfig.badge}</span>
+                <h2>{portalConfig.heroTagline}</h2>
+                <p>{portalConfig.heroDesc}</p>
+              </div>
+
+              <div className="login-hero-bullets">
+                {portalConfig.bullets.map((b, i) => (
+                  <div key={i} className="hero-bullet-row">
+                    <CheckCircle2 size={18} className="bullet-check" />
+                    <span>{b}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="login-security-tag">
+                <Lock size={15} />
+                <span>Encrypted Patient Data & ISO-Aligned Inference</span>
+              </div>
+            </div>
+          </section>
+
+          {/* Right Form Column */}
+          <section className="login-form-col">
+            <div className="login-form-card">
+              <div className="form-card-header">
+                <div className="form-brand-row">
+                  <img src="/dermai-icon.svg" alt="DermAI" className="form-logo-svg" />
+                  <span className="form-brand-name">DermAI</span>
+                </div>
+                <h1 className="form-title">{portalConfig.title}</h1>
+                <p className="form-sub">{portalConfig.subtitle}</p>
+              </div>
+
+              <form onSubmit={(e) => handleLogin(e, portalRole)} className="login-actual-form">
+                <div className="form-group-custom">
+                  <label>Email Address</label>
+                  <input
+                    type="email"
+                    placeholder="name@dermai.clinical"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group-custom">
+                  <div className="label-action-row">
+                    <label>Password</label>
+                    <button
+                      type="button"
+                      className="link-forgot-btn"
+                      onClick={() => {
+                        setMessage("");
+                        setPage("forgot");
+                      }}
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="btn-toggle-eye"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="form-options-row">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                    />
+                    <span>Remember my workspace</span>
+                  </label>
+                </div>
+
+                <button type="submit" className="btn-submit-login" disabled={loading}>
+                  {loading ? (
+                    <span className="btn-loading-flex">
+                      <RefreshCw size={18} className="spin-icon" />
+                      Authenticating...
+                    </span>
+                  ) : (
+                    `Sign In to ${portalConfig.title} →`
+                  )}
+                </button>
+              </form>
+
+              {message && (
+                <div className="form-alert-message" role="alert">
+                  <Info size={16} />
+                  <span>{message}</span>
+                </div>
+              )}
+
+              <div className="form-card-footer">
+                <div className="auth-switch-box">
+                  <span>{portalConfig.switchText}</span>{" "}
+                  <button type="button" className="link-highlight" onClick={portalConfig.onSwitch}>
+                    {portalConfig.switchAction}
+                  </button>
+                </div>
+
+                <div className="switch-portal-actions">
+                  <button
+                    type="button"
+                    className="btn-subtle-switch"
+                    onClick={() => {
+                      setMessage("");
+                      setPage("role_select");
+                    }}
+                  >
+                    &larr; Switch to Another Portal
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-subtle-switch"
+                    onClick={() => {
+                      setMessage("");
+                      setPage("landing");
+                    }}
+                  >
+                    Return to Public Home &rarr;
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
       </main>
     );
   }
@@ -1376,8 +2577,8 @@ function App() {
                 <span>Clinical Multimodal AI Platform</span>
               </div>
 
-              <div className="register-hero-brand">
-                <div className="logo hero-logo">D</div>
+              <div className="register-hero-brand" onClick={() => setPage("landing")}>
+                <img src="/dermai-icon.svg" alt="DermAI" className="hero-brand-svg" />
                 <div>
                   <h2>DermAI Clinical Platform</h2>
                   <span className="hero-tagline">Multimodal Deep Learning Dermatological Screening</span>
@@ -1398,254 +2599,283 @@ function App() {
                   <span>Train Accuracy</span>
                 </div>
                 <div className="hero-metric-box">
-                  <strong>77.55%</strong>
-                  <span>Val Accuracy</span>
-                </div>
-                <div className="hero-metric-box">
                   <strong>76.74%</strong>
                   <span>Test Accuracy</span>
                 </div>
                 <div className="hero-metric-box">
-                  <strong>2,298</strong>
-                  <span>Clinical Cases</span>
+                  <strong>97.69%</strong>
+                  <span>Melanoma AUC</span>
+                </div>
+                <div className="hero-metric-box">
+                  <strong>34 ms</strong>
+                  <span>Inference Speed</span>
                 </div>
               </div>
 
               <div className="hero-features-list">
                 <div className="hero-feature-item">
-                  <span className="feature-icon">🔬</span>
+                  <div className="feature-dot"></div>
                   <div>
-                    <strong>Multimodal Neural Fusion</strong>
-                    <p>Image embeddings fused with 64-dimensional clinical patient metadata.</p>
+                    <h4>Real-time Image Quality Assessment</h4>
+                    <p>OpenCV validation checks sharpness & illumination before clinical inference.</p>
                   </div>
                 </div>
 
                 <div className="hero-feature-item">
-                  <span className="feature-icon">🔍</span>
+                  <div className="feature-dot"></div>
                   <div>
-                    <strong>Grad-CAM Visual Explainability</strong>
-                    <p>Class activation heatmaps show exact lesion attention regions.</p>
+                    <h4>Multimodal Fusion Architecture</h4>
+                    <p>Integrates 64 clinical features with EfficientNet-B0 visual representations.</p>
                   </div>
                 </div>
 
                 <div className="hero-feature-item">
-                  <span className="feature-icon">🛡️</span>
+                  <div className="feature-dot"></div>
                   <div>
-                    <strong>Actionable Triage Protocols</strong>
-                    <p>Pre-screening risk stratification and treatment action pathways.</p>
+                    <h4>Explainable AI with Grad-CAM</h4>
+                    <p>Visual attention heatmaps provide transparent decision-making support.</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="hero-benchmark-badge">
-              <span>PAD-UFES-20 Clinical Benchmark Verified • 6 Disease Categories</span>
+            <div className="register-hero-footer">
+              <p>🔒 End-to-end encrypted medical data &middot; HIPAA aligned cloud deployment</p>
             </div>
           </section>
 
           {/* Right Form Column */}
           <section className="register-form-side">
-            <div className="register-form-header">
-              <h1>Create Your Account</h1>
-              <p className="subtitle">Select your account tier to begin</p>
-            </div>
-
-            <div className="role-selector modern-role-selector">
-              <button
-                type="button"
-                className={role === "user" ? "role-option selected" : "role-option"}
-                onClick={() => setRole("user")}
-                aria-pressed={role === "user"}
-              >
-                <span className="role-icon">👤</span>
-                <div>
-                  <strong>Patient</strong>
-                  <span>Skin image screening & history</span>
+            <div className="register-card">
+              <div className="form-card-header">
+                <div className="form-brand-row">
+                  <img src="/dermai-icon.svg" alt="DermAI" className="form-logo-svg" />
+                  <span className="form-brand-name">DermAI</span>
                 </div>
-                {role === "user" && <span className="role-check">✓</span>}
-              </button>
-              <button
-                type="button"
-                className={role === "clinician" ? "role-option selected" : "role-option"}
-                onClick={() => setRole("clinician")}
-                aria-pressed={role === "clinician"}
-              >
-                <span className="role-icon">🩺</span>
-                <div>
-                  <strong>Clinician</strong>
-                  <span>Case review & diagnostics</span>
-                </div>
-                {role === "clinician" && <span className="role-check">✓</span>}
-              </button>
-            </div>
-
-            <form onSubmit={handleRegister} className="modern-register-form">
-              <div className="form-section-title">
-                <span>1</span> Account Credentials
+                <h2>Create an Account</h2>
+                <p className="subtitle">
+                  Join the platform to screen, review, or manage dermatological diagnostic cases.
+                </p>
               </div>
 
-              <div className="form-row-2">
-                <div>
-                  <label>Full Name</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. John Doe"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    minLength={2}
-                    maxLength={100}
-                    required
-                  />
-                </div>
-                <div>
-                  <label>Email Address</label>
-                  <input
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="form-row-2">
-                <div>
-                  <label>Password</label>
-                  <input
-                    type="password"
-                    placeholder="Min 8 characters"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    minLength={8}
-                    maxLength={128}
-                    required
-                  />
-                </div>
-                <div>
-                  <label>Confirm Password</label>
-                  <input
-                    type="password"
-                    placeholder="Re-enter password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    minLength={8}
-                    maxLength={128}
-                    required
-                  />
-                </div>
-              </div>
-
-              {role === "user" && (
-                <>
-                  <div className="form-section-title" style={{ marginTop: "20px" }}>
-                    <span>2</span> Clinical Patient Baseline
-                    <small style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "normal", marginLeft: "auto" }}>
-                      *Calibrates multimodal epidemiology
-                    </small>
-                  </div>
-
-                  <div className="form-row-2">
+              {/* Role Toggle Selector */}
+              <div className="role-selector-wrap">
+                <label className="field-label">I am registering as:</label>
+                <div className="role-toggle-group">
+                  <button
+                    type="button"
+                    className={`role-toggle-btn ${role === "user" ? "active" : ""}`}
+                    onClick={() => setRole("user")}
+                  >
+                    <span className="role-btn-icon">👤</span>
                     <div>
-                      <label>Patient Age (years)</label>
-                      <input
-                        type="number"
-                        placeholder="e.g. 55"
-                        value={patientAge}
-                        onChange={(e) => setPatientAge(e.target.value)}
-                        min="1"
-                        max="120"
-                        required
-                      />
+                      <strong>Patient</strong>
+                      <small>Upload & monitor cases</small>
                     </div>
-                    <div>
-                      <label>Biological Gender</label>
-                      <select
-                        value={patientGender}
-                        onChange={(e) => setPatientGender(e.target.value)}
-                      >
-                        <option value="">Select gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                        <option value="Prefer not to say">Prefer not to say</option>
-                      </select>
-                    </div>
-                  </div>
+                  </button>
 
-                  <div className="form-group-full">
-                    <label>Relevant Medical History</label>
-                    <textarea
-                      rows="2"
-                      placeholder="Family history of skin cancer, sun exposure, hypertension..."
-                      value={medicalHistory}
-                      onChange={(e) => setMedicalHistory(e.target.value)}
+                  <button
+                    type="button"
+                    className={`role-toggle-btn ${role === "clinician" ? "active" : ""}`}
+                    onClick={() => setRole("clinician")}
+                  >
+                    <span className="role-btn-icon">🩺</span>
+                    <div>
+                      <strong>Clinician</strong>
+                      <small>Diagnostic review & notes</small>
+                    </div>
+                  </button>
+                </div>
+
+                {role === "clinician" && (
+                  <div className="clinician-notice-banner">
+                    <span className="notice-icon">ℹ️</span>
+                    <p>Clinician accounts require administrator credential verification before accessing patient records.</p>
+                  </div>
+                )}
+              </div>
+
+              <form onSubmit={handleRegister} className="register-form">
+                {/* Account Details */}
+                <div className="form-section-title">Account Credentials</div>
+
+                <div className="form-row-2col">
+                  <div className="form-group-login">
+                    <label>Full Name *</label>
+                    <input
+                      type="text"
+                      placeholder={role === "clinician" ? "Dr. Jane Doe" : "Jane Doe"}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
                     />
                   </div>
 
-                  <div className="form-row-2">
-                    <div>
-                      <label>Previous Skin Treatments</label>
-                      <textarea
-                        rows="2"
-                        placeholder="Cryotherapy, topical ointments, surgical biopsies..."
-                        value={previousSkinTreatments}
-                        onChange={(e) => setPreviousSkinTreatments(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label>Current Medications</label>
-                      <textarea
-                        rows="2"
-                        placeholder="Immunosuppressants, corticosteroids..."
-                        value={currentMedications}
-                        onChange={(e) => setCurrentMedications(e.target.value)}
-                      />
-                    </div>
+                  <div className="form-group-login">
+                    <label>Email Address *</label>
+                    <input
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
                   </div>
-                </>
-              )}
+                </div>
 
-              {role === "clinician" && (
-                <div className="clinician-access-notice">
-                  <span className="notice-icon">🩺</span>
-                  <div>
-                    <strong>Clinician Review Requirement:</strong>
-                    <p>
-                      Clinician accounts provide access to full patient records, class confusion matrices, and review workflows.
-                      Access requires administrative verification prior to first sign-in.
-                    </p>
+                <div className="form-row-2col">
+                  <div className="form-group-login">
+                    <label>Password (min 8 chars) *</label>
+                    <div className="password-input-wrapper">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="At least 8 characters"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        minLength={8}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="btn-toggle-eye"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
                   </div>
+
+                  <div className="form-group-login">
+                    <label>Confirm Password *</label>
+                    <div className="password-input-wrapper">
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Re-enter password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        minLength={8}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="btn-toggle-eye"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Patient Profile Fields */}
+                {role === "user" && (
+                  <div className="patient-fields-block">
+                    <div className="form-section-title">Patient Profile Information</div>
+
+                    <div className="form-row-2col">
+                      <div className="form-group-login">
+                        <label>Age *</label>
+                        <input
+                          type="number"
+                          placeholder="e.g. 45"
+                          value={patientAge}
+                          onChange={(e) => setPatientAge(e.target.value)}
+                          min={1}
+                          max={120}
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group-login">
+                        <label>Biological Sex</label>
+                        <select
+                          value={patientGender}
+                          onChange={(e) => setPatientGender(e.target.value)}
+                        >
+                          <option value="">Select sex</option>
+                          <option value="female">Female</option>
+                          <option value="male">Male</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="form-group-login">
+                      <label>Medical History</label>
+                      <textarea
+                        rows={2}
+                        placeholder="Relevant medical history (e.g. sun exposure, family history of melanoma)"
+                        value={medicalHistory}
+                        onChange={(e) => setMedicalHistory(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="form-row-2col">
+                      <div className="form-group-login">
+                        <label>Previous Skin Treatments</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Cryotherapy, excision, none"
+                          value={previousSkinTreatments}
+                          onChange={(e) => setPreviousSkinTreatments(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="form-group-login">
+                        <label>Current Medications</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Immunosuppressants, none"
+                          value={currentMedications}
+                          onChange={(e) => setCurrentMedications(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <button type="submit" className="btn-login-submit" disabled={loading}>
+                  {loading
+                    ? "Creating Account..."
+                    : role === "clinician"
+                    ? "Submit Clinician Application &rarr;"
+                    : "Complete Registration &rarr;"}
+                </button>
+              </form>
+
+              {message && (
+                <div className="form-alert-message" role="alert">
+                  <Info size={16} />
+                  <span>{message}</span>
                 </div>
               )}
 
-              <button type="submit" className="btn-register-submit" disabled={loading}>
-                {loading
-                  ? "Creating Account..."
-                  : role === "user"
-                  ? "✓ Complete Patient Registration →"
-                  : "✓ Submit Clinician Registration Request →"}
-              </button>
-            </form>
-
-            {message && <p className="upload-note" role="alert">{message}</p>}
-
-            <p className="auth-switch">
-              Already registered?{" "}
-              <button
-                className="text-button"
-                onClick={() => {
-                  setMessage("");
-                  setPage("login");
-                }}
-              >
-                Sign In
-              </button>
-            </p>
-
-            <p className="disclaimer" style={{ marginTop: "14px", fontSize: "0.78rem" }}>
-              Medical Notice: DermAI is a decision-support and screening platform. It does not replace a physical dermatologist examination.
-            </p>
+              <div className="login-footer">
+                <p className="auth-switch">
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    className="text-button-highlight"
+                    onClick={() => {
+                      setMessage("");
+                      setPage("role_select");
+                    }}
+                  >
+                    Sign In &rarr;
+                  </button>
+                </p>
+                <button
+                  type="button"
+                  className="btn-subtle-switch"
+                  onClick={() => {
+                    setMessage("");
+                    setPage("landing");
+                  }}
+                >
+                  &larr; Return to Public Home
+                </button>
+              </div>
+            </div>
           </section>
         </div>
       </main>
@@ -1656,53 +2886,176 @@ function App() {
 
   if (page === "forgot") {
     return (
-      <main className="login-page">
-        <section className="login-card">
-          <div className="logo">D</div>
+      <main className="dedicated-login-page">
+        <div className="login-split-container single-center">
+          <div className="login-form-card center-card">
+            <div className="form-card-header">
+              <div className="form-brand-row">
+                <img src="/dermai-icon.svg" alt="DermAI" className="form-logo-svg" />
+                <span className="form-brand-name">DermAI</span>
+              </div>
+              <h1 className="form-title">Reset Your Password</h1>
+              <p className="form-sub">
+                Enter your registered email address below. We'll send you a secure link to reset your password.
+              </p>
+            </div>
 
-          <h1>Forgot Password?</h1>
+            <form onSubmit={handleForgotPassword} className="login-actual-form">
+              <div className="form-group-custom">
+                <label>Registered Email Address</label>
+                <input
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
 
-          <p className="subtitle">
-            Password recovery will be connected to the backend
-          </p>
+              <button type="submit" className="btn-submit-login" disabled={loading}>
+                {loading ? (
+                  <span className="btn-loading-flex">
+                    <RefreshCw size={18} className="spin-icon" />
+                    Dispatching Link...
+                  </span>
+                ) : (
+                  "Send Password Reset Link →"
+                )}
+              </button>
+            </form>
 
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              setMessage(
-                "Password recovery is not yet configured. Please contact the administrator."
-              );
-            }}
-          >
-            <label>Email address</label>
+            {message && (
+              <div className="form-alert-message" role="alert">
+                <Info size={16} />
+                <span>{message}</span>
+              </div>
+            )}
 
-            <input
-              type="email"
-              placeholder="Enter your registered email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <div className="form-card-footer text-center">
+              <button
+                type="button"
+                className="btn-subtle-switch"
+                onClick={() => {
+                  setMessage("");
+                  setPage("role_select");
+                }}
+              >
+                &larr; Back to Workspace Portals
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
-            <button type="submit">
-              Request Password Reset
-            </button>
-          </form>
+  // ---------------- RESET PASSWORD PAGE ----------------
 
-          {message && (
-            <p className="upload-note">{message}</p>
-          )}
+  if (page === "reset_password") {
+    return (
+      <main className="dedicated-login-page">
+        <div className="login-split-container single-center">
+          <div className="login-form-card center-card">
+            <div className="form-card-header">
+              <div className="form-brand-row">
+                <img src="/dermai-icon.svg" alt="DermAI" className="form-logo-svg" />
+                <span className="form-brand-name">DermAI</span>
+              </div>
+              <h1 className="form-title">Set New Password</h1>
+              <p className="form-sub">
+                Enter your new secure password for your DermAI account (minimum 6 characters).
+              </p>
+            </div>
 
-          <button
-            className="text-button"
-            onClick={() => {
-              setMessage("");
-              setPage("login");
-            }}
-          >
-            Back to Sign In
-          </button>
-        </section>
+            <form onSubmit={handleResetPassword} className="login-actual-form">
+              {!resetToken && (
+                <div className="form-group-custom">
+                  <label>Password Reset Token</label>
+                  <input
+                    type="text"
+                    placeholder="Paste reset token here"
+                    value={resetToken}
+                    onChange={(e) => setResetToken(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
+
+              <div className="form-group-custom">
+                <label>New Password</label>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showResetPassword ? "text" : "password"}
+                    placeholder="Enter new password (min 6 characters)"
+                    value={resetNewPassword}
+                    onChange={(e) => setResetNewPassword(e.target.value)}
+                    minLength={6}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="btn-toggle-eye"
+                    onClick={() => setShowResetPassword(!showResetPassword)}
+                  >
+                    {showResetPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-group-custom">
+                <label>Confirm New Password</label>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showResetPassword ? "text" : "password"}
+                    placeholder="Re-enter new password"
+                    value={resetConfirmPassword}
+                    onChange={(e) => setResetConfirmPassword(e.target.value)}
+                    minLength={6}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="btn-toggle-eye"
+                    onClick={() => setShowResetPassword(!showResetPassword)}
+                  >
+                    {showResetPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" className="btn-submit-login" disabled={loading}>
+                {loading ? (
+                  <span className="btn-loading-flex">
+                    <RefreshCw size={18} className="spin-icon" />
+                    Updating Password...
+                  </span>
+                ) : (
+                  "Update Password & Sign In →"
+                )}
+              </button>
+            </form>
+
+            {message && (
+              <div className="form-alert-message" role="alert">
+                <Info size={16} />
+                <span>{message}</span>
+              </div>
+            )}
+
+            <div className="form-card-footer text-center">
+              <button
+                type="button"
+                className="btn-subtle-switch"
+                onClick={() => {
+                  setMessage("");
+                  setPage("role_select");
+                }}
+              >
+                &larr; Back to Workspace Portals
+              </button>
+            </div>
+          </div>
+        </div>
       </main>
     );
   }
@@ -1806,8 +3159,11 @@ function App() {
     <div className="app-layout">
       <aside className="sidebar">
         <div className="brand">
-          <span className="brand-logo">D</span>
-          <span>DermAI</span>
+          <img src="/dermai-icon.svg" alt="DermAI Logo" className="brand-logo-img" />
+          <div className="brand-text-col">
+            <span className="brand-title">DermAI</span>
+            <span className="brand-sub">Clinical Intelligence</span>
+          </div>
         </div>
 
         <p className="nav-heading">

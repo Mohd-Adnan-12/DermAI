@@ -7,6 +7,8 @@ import os
 import re
 import json
 import base64
+import secrets
+import hashlib
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -507,6 +509,84 @@ def build_clinician_review_email_html(patient_name: str, case_id: int, clinician
 </html>"""
 
 
+def send_password_reset_email(recipient_email: str, recipient_name: str, reset_url: str) -> bool:
+    """Send secure password reset link to user via HTTPS API (Brevo/Resend) or SMTP."""
+    if not recipient_email or "@" not in recipient_email:
+        return False
+
+    subject = "🔐 DermAI Security: Password Reset Request"
+    html_content = f"""<!DOCTYPE html>
+<html>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px;">
+  <div style="max-width: 560px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+      <div style="background: linear-gradient(135deg, #0d9488, #0284c7); color: #fff; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px;">D</div>
+      <div>
+        <h2 style="margin: 0; font-size: 20px; color: #0f172a;">DermAI Platform</h2>
+        <span style="font-size: 12px; color: #0d9488; font-weight: 600;">Secure Password Reset</span>
+      </div>
+    </div>
+    
+    <p style="font-size: 15px; color: #334155; line-height: 1.6;">Hello <strong>{recipient_name or 'there'}</strong>,</p>
+    <p style="font-size: 15px; color: #334155; line-height: 1.6;">A request was received to reset the password for your DermAI account. Click the button below to choose a new password. This link is valid for <strong>30 minutes</strong>.</p>
+    
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="{reset_url}" style="background: #0d9488; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 15px; display: inline-block;">Reset My Password &rarr;</a>
+    </div>
+
+    <p style="font-size: 13px; color: #64748b; line-height: 1.5;">If the button does not work, copy and paste this link into your browser:</p>
+    <p style="font-size: 12px; color: #0284c7; word-break: break-all; background: #f1f5f9; padding: 12px; border-radius: 6px;">{reset_url}</p>
+
+    <p style="font-size: 13px; color: #64748b; line-height: 1.5;">If you did not request a password reset, you can safely ignore this email; your password will remain unchanged.</p>
+    <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
+    <p style="font-size: 11px; color: #94a3b8; text-align: center;">DermAI Clinical Diagnostics &middot; Secure Identity Management</p>
+  </div>
+</body>
+</html>"""
+
+    text_content = f"Hello {recipient_name},\n\nA request was received to reset your DermAI password.\nReset link (valid for 30 minutes):\n{reset_url}\n\nIf you did not request this, you may ignore this email."
+
+    print(f"\n=======================================================")
+    print(f"🔐 [PASSWORD RESET LINK GENERATED]")
+    print(f"To:   {recipient_email}")
+    print(f"URL:  {reset_url}")
+    print(f"=======================================================\n")
+
+    if BREVO_API_KEY or RESEND_API_KEY:
+        try:
+            if send_via_https_api(recipient_email, recipient_name or "DermAI User", subject, html_content, text_content):
+                return True
+        except Exception as e:
+            print(f"[RESET EMAIL WARNING] HTTPS send failed: {e}")
+
+    if SMTP_HOST:
+        try:
+            import smtplib
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.text import MIMEText
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = subject
+            msg["From"] = f"DermAI Security <{SMTP_FROM_EMAIL}>"
+            msg["To"] = recipient_email
+            msg.attach(MIMEText(text_content, "plain"))
+            msg.attach(MIMEText(html_content, "html"))
+            if SMTP_PORT == 465:
+                server = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10)
+            else:
+                server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10)
+                if SMTP_USE_TLS:
+                    server.starttls()
+            if SMTP_USER and SMTP_PASSWORD:
+                server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(SMTP_FROM_EMAIL, [recipient_email], msg.as_string())
+            server.quit()
+            return True
+        except Exception as err:
+            print(f"[RESET EMAIL SMTP WARNING] {err}")
+
+    return True
+
+
 def send_analysis_email_alert(
     recipient_email: str,
     patient_name: str,
@@ -876,6 +956,17 @@ def init_db():
                         analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     );
                 """)
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS password_resets (
+                        reset_id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+                        token_hash VARCHAR(128) NOT NULL,
+                        expires_at TIMESTAMP NOT NULL,
+                        used BOOLEAN NOT NULL DEFAULT FALSE,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    );
+                """)
+                cur.execute("CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token_hash);")
                 cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_approved BOOLEAN NOT NULL DEFAULT TRUE;")
                 cur.execute("ALTER TABLE cases ADD COLUMN IF NOT EXISTS affected_body_part VARCHAR(100);")
                 cur.execute("ALTER TABLE cases ADD COLUMN IF NOT EXISTS condition_duration VARCHAR(100);")
@@ -1033,6 +1124,20 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+    portal_role: str | None = None
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class VerifyResetTokenRequest(BaseModel):
+    token: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(min_length=6, max_length=128)
 
 
 class PatientProfileRequest(BaseModel):
@@ -1288,6 +1393,27 @@ def login(data: LoginRequest):
                 detail="Incorrect email or password."
             )
 
+        if data.portal_role:
+            portal_role = data.portal_role.strip().lower()
+            user_role = (user[4] or "user").strip().lower()
+            if portal_role == "patient" and user_role != "user":
+                role_label = "Clinician" if user_role == "clinician" else "Administrator"
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"This account is registered as a {role_label}. Please use the {role_label} Portal to sign in."
+                )
+            elif portal_role == "clinician" and user_role != "clinician":
+                role_label = "Patient" if user_role == "user" else "Administrator"
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"This account is registered as a {role_label}. Please use the {role_label} Portal to sign in."
+                )
+            elif portal_role == "admin" and user_role not in ("admin", "administrator"):
+                raise HTTPException(
+                    status_code=403,
+                    detail="Access restricted. This portal is strictly for DermAI System Administrators."
+                )
+
         if user[4] == "clinician" and not user[5]:
             raise HTTPException(
                 status_code=403,
@@ -1316,6 +1442,151 @@ def login(data: LoginRequest):
             "email": user[2],
             "role": user[4]
         }
+    }
+
+
+# ---------------- PASSWORD RESET APIs ----------------
+
+@app.post("/auth/forgot-password")
+def forgot_password(data: ForgotPasswordRequest):
+    email = data.email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT user_id, name, email FROM users WHERE email = %s",
+                (email,)
+            )
+            user = cur.fetchone()
+
+            if user:
+                user_id, name, user_email = user
+                raw_token = secrets.token_urlsafe(32)
+                token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+                expires_at = datetime.now(timezone.utc) + timedelta(minutes=30)
+
+                # Invalidate existing unused tokens for this user
+                cur.execute(
+                    "UPDATE password_resets SET used = TRUE WHERE user_id = %s AND used = FALSE",
+                    (user_id,)
+                )
+
+                cur.execute(
+                    """
+                    INSERT INTO password_resets (user_id, token_hash, expires_at, used)
+                    VALUES (%s, %s, %s, FALSE)
+                    """,
+                    (user_id, token_hash, expires_at)
+                )
+                conn.commit()
+
+                # Determine base URL for reset link
+                app_host = os.environ.get("RENDER_EXTERNAL_URL", "").strip() or os.environ.get("FRONTEND_URL", "http://localhost:5173").strip()
+                if not app_host.startswith("http"):
+                    app_host = f"https://{app_host}"
+                reset_url = f"{app_host.rstrip('/')}/?reset_token={raw_token}"
+
+                send_password_reset_email(user_email, name, reset_url)
+
+    # Return standard response to prevent user enumeration
+    return {
+        "status": "success",
+        "message": "If an account matches this email, password reset instructions have been dispatched."
+    }
+
+
+@app.post("/auth/verify-reset-token")
+def verify_reset_token(data: VerifyResetTokenRequest):
+    token = data.token.strip()
+    if not token:
+        raise HTTPException(status_code=400, detail="Reset token is required.")
+
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT pr.reset_id, pr.expires_at, pr.used, u.email, u.name
+                FROM password_resets pr
+                JOIN users u ON u.user_id = pr.user_id
+                WHERE pr.token_hash = %s
+                """,
+                (token_hash,)
+            )
+            record = cur.fetchone()
+
+            if not record:
+                raise HTTPException(status_code=400, detail="Invalid or unrecognized password reset token.")
+
+            reset_id, expires_at, used, email, name = record
+            if used:
+                raise HTTPException(status_code=400, detail="This password reset link has already been used.")
+
+            now = datetime.now(timezone.utc)
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+            if now > expires_at:
+                raise HTTPException(status_code=400, detail="This password reset link has expired (valid for 30 minutes).")
+
+            return {
+                "valid": True,
+                "email": email,
+                "name": name
+            }
+
+
+@app.post("/auth/reset-password")
+def reset_password(data: ResetPasswordRequest):
+    token = data.token.strip()
+    new_password = data.new_password.strip()
+
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters.")
+
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT pr.reset_id, pr.user_id, pr.expires_at, pr.used
+                FROM password_resets pr
+                WHERE pr.token_hash = %s
+                """,
+                (token_hash,)
+            )
+            record = cur.fetchone()
+
+            if not record:
+                raise HTTPException(status_code=400, detail="Invalid or unrecognized password reset token.")
+
+            reset_id, user_id, expires_at, used = record
+            if used:
+                raise HTTPException(status_code=400, detail="This password reset link has already been used.")
+
+            now = datetime.now(timezone.utc)
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+            if now > expires_at:
+                raise HTTPException(status_code=400, detail="This password reset link has expired.")
+
+            hashed_pw = password_hash.hash(new_password)
+            cur.execute(
+                "UPDATE users SET password_hash = %s WHERE user_id = %s",
+                (hashed_pw, user_id)
+            )
+            cur.execute(
+                "UPDATE password_resets SET used = TRUE WHERE reset_id = %s",
+                (reset_id,)
+            )
+            conn.commit()
+
+    return {
+        "status": "success",
+        "message": "Password updated successfully. You may now sign in with your new credentials."
     }
 
 
