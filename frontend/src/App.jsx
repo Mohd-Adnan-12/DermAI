@@ -29,6 +29,7 @@ import {
   ExternalLink,
   Menu,
   HeartPulse,
+  BrainCircuit,
   Sliders,
   Check,
   User,
