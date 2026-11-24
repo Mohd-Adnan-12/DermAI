@@ -1,0 +1,155 @@
+[
+  {
+    "file": "BCC_Sample_1.png",
+    "disease_code": "BCC",
+    "disease_name": "Basal Cell Carcinoma",
+    "expected_prediction": "BCC",
+    "expected_confidence": "99.74%",
+    "recommended_body_part": "Neck",
+    "recommended_duration": "6 months",
+    "recommended_symptoms": [
+      "Itching",
+      "Bleeding",
+      "Growing / Enlarging",
+      "Elevated Bump"
+    ]
+  },
+  {
+    "file": "BCC_Sample_2.png",
+    "disease_code": "BCC",
+    "disease_name": "Basal Cell Carcinoma",
+    "expected_prediction": "BCC",
+    "expected_confidence": "84.11%",
+    "recommended_body_part": "Face",
+    "recommended_duration": "6 months",
+    "recommended_symptoms": [
+      "Bleeding",
+      "Growing / Enlarging",
+      "Elevated Bump"
+    ]
+  },
+  {
+    "file": "MEL_Sample_1.png",
+    "disease_code": "MEL",
+    "disease_name": "Melanoma",
+    "expected_prediction": "MEL",
+    "expected_confidence": "99.99%",
+    "recommended_body_part": "Thigh",
+    "recommended_duration": "6 months",
+    "recommended_symptoms": [
+      "Growing / Enlarging",
+      "Elevated Bump"
+    ]
+  },
+  {
+    "file": "MEL_Sample_2.png",
+    "disease_code": "MEL",
+    "disease_name": "Melanoma",
+    "expected_prediction": "MEL",
+    "expected_confidence": "99.56%",
+    "recommended_body_part": "Back",
+    "recommended_duration": "6 months",
+    "recommended_symptoms": [
+      "Growing / Enlarging",
+      "Elevated Bump"
+    ]
+  },
+  {
+    "file": "SCC_Sample_1.png",
+    "disease_code": "SCC",
+    "disease_name": "Squamous Cell Carcinoma",
+    "expected_prediction": "SCC",
+    "expected_confidence": "99.88%",
+    "recommended_body_part": "Forearm",
+    "recommended_duration": "6 months",
+    "recommended_symptoms": [
+      "Itching",
+      "Bleeding",
+      "Elevated Bump"
+    ]
+  },
+  {
+    "file": "SCC_Sample_2.png",
+    "disease_code": "SCC",
+    "disease_name": "Squamous Cell Carcinoma",
+    "expected_prediction": "SCC",
+    "expected_confidence": "99.34%",
+    "recommended_body_part": "Chest",
+    "recommended_duration": "6 months",
+    "recommended_symptoms": [
+      "Itching"
+    ]
+  },
+  {
+    "file": "ACK_Sample_1.png",
+    "disease_code": "ACK",
+    "disease_name": "Actinic Keratosis",
+    "expected_prediction": "ACK",
+    "expected_confidence": "99.67%",
+    "recommended_body_part": "Hand",
+    "recommended_duration": "6 months",
+    "recommended_symptoms": [
+      "Itching"
+    ]
+  },
+  {
+    "file": "ACK_Sample_2.png",
+    "disease_code": "ACK",
+    "disease_name": "Actinic Keratosis",
+    "expected_prediction": "ACK",
+    "expected_confidence": "96.36%",
+    "recommended_body_part": "Face",
+    "recommended_duration": "6 months",
+    "recommended_symptoms": [
+      "Itching"
+    ]
+  },
+  {
+    "file": "NEV_Sample_1.png",
+    "disease_code": "NEV",
+    "disease_name": "Melanocytic Nevus",
+    "expected_prediction": "NEV",
+    "expected_confidence": "99.99%",
+    "recommended_body_part": "Arm",
+    "recommended_duration": "6 months",
+    "recommended_symptoms": [
+      "Elevated Bump"
+    ]
+  },
+  {
+    "file": "NEV_Sample_2.png",
+    "disease_code": "NEV",
+    "disease_name": "Melanocytic Nevus",
+    "expected_prediction": "NEV",
+    "expected_confidence": "99.99%",
+    "recommended_body_part": "Chest",
+    "recommended_duration": "6 months",
+    "recommended_symptoms": [
+      "Elevated Bump"
+    ]
+  },
+  {
+    "file": "SEK_Sample_1.png",
+    "disease_code": "SEK",
+    "disease_name": "Seborrheic Keratosis",
+    "expected_prediction": "SEK",
+    "expected_confidence": "99.59%",
+    "recommended_body_part": "Face",
+    "recommended_duration": "6 months",
+    "recommended_symptoms": [
+      "Elevated Bump"
+    ]
+  },
+  {
+    "file": "SEK_Sample_2.png",
+    "disease_code": "SEK",
+    "disease_name": "Seborrheic Keratosis",
+    "expected_prediction": "SEK",
+    "expected_confidence": "93.79%",
+    "recommended_body_part": "Scalp",
+    "recommended_duration": "6 months",
+    "recommended_symptoms": [
+      "Elevated Bump"
+    ]
+  }
+]

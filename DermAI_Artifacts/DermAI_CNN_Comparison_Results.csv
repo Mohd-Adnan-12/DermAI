@@ -1,0 +1,5 @@
+Model,Accuracy (%),Macro Precision (%),Macro Recall (%),Macro F1 (%),Training time (sec),Inference (ms/image)
+efficientnet_b0,76.74,73.51,70.47,71.86,918.8,34.09
+convnext_tiny,75.65,70.56,66.22,67.63,941.3,36.14
+resnet50,77.83,74.7,64.13,67.47,936.8,36.19
+mobilenet_v2,72.39,68.41,67.23,67.46,953.2,36.26

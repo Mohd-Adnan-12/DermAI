@@ -1,0 +1,39 @@
+# Environment secrets
+.env
+.env.local
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+.npm
+.eslintcache
+
+# Raw datasets (multi-gigabyte)
+PAD-UFES-20/
+PAD-UFES-20.zip
+
+# Large offline comparison models (>100MB) that exceed GitHub file size limit
+DermAI_Artifacts/*comparison.pth
+DermAI_Artifacts/dermai_best_frozen.pth
+
+# User uploaded lesions in development
+uploads/*
+!uploads/.gitkeep
+
+# System & IDE files
+.DS_Store
+.idea/
+.vscode/
+*.log
