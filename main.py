@@ -257,6 +257,68 @@ SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "").strip()
 SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "").strip() or SMTP_USER or "alerts@dermai.clinical"
 SMTP_USE_TLS = os.environ.get("SMTP_USE_TLS", "true").lower() in ("true", "1", "yes")
 
+# HTTPS Email APIs for Cloud Providers (Render Free Tier blocks raw SMTP port 587)
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "").strip()
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "").strip()
+
+
+def send_via_https_api(recipient_email: str, patient_name: str, subject: str, html_content: str, text_content: str) -> bool:
+    """Send email over standard HTTPS Port 443 to bypass cloud provider SMTP blocks."""
+    import urllib.request
+
+    if BREVO_API_KEY:
+        try:
+            req_data = json.dumps({
+                "sender": {"name": "DermAI Clinical Hub", "email": SMTP_FROM_EMAIL or "dermai.diagnostics@gmail.com"},
+                "to": [{"email": recipient_email, "name": patient_name}],
+                "subject": subject,
+                "htmlContent": html_content,
+                "textContent": text_content
+            }).encode("utf-8")
+            req = urllib.request.Request(
+                "https://api.brevo.com/v3/smtp/email",
+                data=req_data,
+                headers={
+                    "api-key": BREVO_API_KEY,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status in (200, 201, 202):
+                    print(f"📧 [EMAIL SENT via Brevo HTTPS API] Live notification dispatched to {recipient_email}")
+                    return True
+        except Exception as exc:
+            print(f"⚠️ [Brevo HTTPS API Error]: {exc}")
+
+    if RESEND_API_KEY:
+        try:
+            req_data = json.dumps({
+                "from": "DermAI Clinical Hub <onboarding@resend.dev>",
+                "to": [recipient_email],
+                "subject": subject,
+                "html": html_content,
+                "text": text_content
+            }).encode("utf-8")
+            req = urllib.request.Request(
+                "https://api.resend.com/emails",
+                data=req_data,
+                headers={
+                    "Authorization": f"Bearer {RESEND_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status in (200, 201, 202):
+                    print(f"📧 [EMAIL SENT via Resend HTTPS API] Live notification dispatched to {recipient_email}")
+                    return True
+        except Exception as exc:
+            print(f"⚠️ [Resend HTTPS API Error]: {exc}")
+
+    return False
+
 
 def build_report_email_html(patient_name: str, case_id: int, prediction: dict, affected_body_part: str = "Unspecified", condition_duration: str = "Unspecified") -> str:
     disease_name = prediction.get("disease_name") or prediction.get("predicted_class", "Undetermined Condition")
@@ -456,6 +518,11 @@ def send_analysis_email_alert(
     html_content = build_report_email_html(patient_name, case_id, prediction, affected_body_part, condition_duration)
     text_content = build_report_email_text(patient_name, case_id, prediction, affected_body_part)
 
+    # Try HTTPS API first if configured (Port 443 - bypasses Render Free Tier SMTP block)
+    if BREVO_API_KEY or RESEND_API_KEY:
+        if send_via_https_api(recipient_email, patient_name, subject, html_content, text_content):
+            return True
+
     if not SMTP_HOST:
         print(f"\n=======================================================")
         print(f"📧 [EMAIL DISPATCH SIMULATION] Report Alert Dispatched")
@@ -511,6 +578,11 @@ def send_clinician_review_email_alert(
     subject = f"🩺 DermAI Case Update: Clinician Review for Case #{case_id}"
     html_content = build_clinician_review_email_html(patient_name, case_id, clinician_name, clinical_notes, status)
     text_content = f"Case #{case_id} has been reviewed by Dr. {clinician_name}. Status: {status}. Notes: {clinical_notes}"
+
+    # Try HTTPS API first if configured (Port 443 - bypasses Render Free Tier SMTP block)
+    if BREVO_API_KEY or RESEND_API_KEY:
+        if send_via_https_api(recipient_email, patient_name, subject, html_content, text_content):
+            return True
 
     if not SMTP_HOST:
         print(f"\n📧 [EMAIL DISPATCH SIMULATION] Clinician Review Alert Dispatched to {recipient_email} (Case #{case_id})\n")
