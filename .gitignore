@@ -23,6 +23,7 @@ frontend/dist/
 # Raw datasets (multi-gigabyte)
 PAD-UFES-20/
 PAD-UFES-20.zip
+sample_test_images/
 
 # Large offline comparison models (>100MB) that exceed GitHub file size limit
 DermAI_Artifacts/*comparison.pth
