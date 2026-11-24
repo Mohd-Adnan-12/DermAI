@@ -259,17 +259,19 @@ SMTP_USE_TLS = os.environ.get("SMTP_USE_TLS", "true").lower() in ("true", "1", "
 
 # HTTPS Email APIs for Cloud Providers (Render Free Tier blocks raw SMTP port 587)
 BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "").strip()
+BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL", "").strip() or SMTP_FROM_EMAIL or "dermai.diagnostics@gmail.com"
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "").strip()
 
 
 def send_via_https_api(recipient_email: str, patient_name: str, subject: str, html_content: str, text_content: str) -> bool:
     """Send email over standard HTTPS Port 443 to bypass cloud provider SMTP blocks."""
     import urllib.request
+    import urllib.error
 
     if BREVO_API_KEY:
         try:
             req_data = json.dumps({
-                "sender": {"name": "DermAI Clinical Hub", "email": SMTP_FROM_EMAIL or "dermai.diagnostics@gmail.com"},
+                "sender": {"name": "DermAI Clinical Hub", "email": BREVO_SENDER_EMAIL},
                 "to": [{"email": recipient_email, "name": patient_name}],
                 "subject": subject,
                 "htmlContent": html_content,
@@ -285,10 +287,13 @@ def send_via_https_api(recipient_email: str, patient_name: str, subject: str, ht
                 },
                 method="POST"
             )
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            with urllib.request.urlopen(req, timeout=12) as resp:
                 if resp.status in (200, 201, 202):
                     print(f"📧 [EMAIL SENT via Brevo HTTPS API] Live notification dispatched to {recipient_email}")
                     return True
+        except urllib.error.HTTPError as http_err:
+            error_body = http_err.read().decode("utf-8", errors="ignore")
+            print(f"⚠️ [Brevo HTTPS API HTTP {http_err.code}]: {error_body}")
         except Exception as exc:
             print(f"⚠️ [Brevo HTTPS API Error]: {exc}")
 
