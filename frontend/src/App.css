@@ -6223,3 +6223,101 @@ button:disabled {
     font-size: 12px;
   }
 }
+
+/* ---------- Workspace Return Navigation ---------- */
+.topbar-left-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.dashboard-return-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-bottom: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.dashboard-return-btn:hover {
+  background: #ffffff;
+  color: var(--derm-navy);
+  border-color: #cbd5e1;
+  transform: translateX(-2px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
+}
+
+.dashboard-return-btn svg {
+  flex-shrink: 0;
+  color: var(--derm-primary);
+  transition: transform 0.2s ease;
+}
+
+.dashboard-return-btn:hover svg {
+  transform: translateX(-2px);
+}
+
+.clickable-brand {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.clickable-brand:hover {
+  opacity: 0.85;
+}
+
+.sidebar-return-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2ece9;
+  color: #475569;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 9px 12px;
+  border-radius: 9px;
+  cursor: pointer;
+  margin: 12px 0 16px 0;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.sidebar-return-btn:hover {
+  background: #e7f5f2;
+  color: var(--derm-navy);
+  border-color: #cbd5e1;
+  transform: translateX(-2px);
+}
+
+.sidebar-return-btn svg {
+  flex-shrink: 0;
+  color: var(--derm-primary);
+  transition: transform 0.2s ease;
+}
+
+.sidebar-return-btn:hover svg {
+  transform: translateX(-2px);
+}
+
+.nav-portal-btn.active-workspace-btn {
+  background: var(--derm-primary);
+  color: #ffffff;
+  border-color: var(--derm-primary);
+  font-weight: 700;
+}
+
+.nav-portal-btn.active-workspace-btn:hover {
+  background: #087f73;
+  color: #ffffff;
+}

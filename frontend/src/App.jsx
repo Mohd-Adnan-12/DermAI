@@ -1792,6 +1792,18 @@ function App() {
             </nav>
 
             <div className="landing-nav-actions">
+              {user && (
+                <button
+                  type="button"
+                  className="nav-portal-btn active-workspace-btn"
+                  onClick={() => {
+                    setMessage("");
+                    setPage("dashboard");
+                  }}
+                >
+                  Go to {user.role === "clinician" ? "Clinician" : user.role === "admin" ? "Admin" : "User"} Workspace &rarr;
+                </button>
+              )}
               <button
                 type="button"
                 className="nav-portal-btn patient"
@@ -1843,6 +1855,19 @@ function App() {
               <a href="#how-it-works" onClick={() => setMobileNavOpen(false)}>How It Works</a>
               <a href="#performance" onClick={() => setMobileNavOpen(false)}>Performance</a>
               <div className="mobile-drawer-portals">
+                {user && (
+                  <button
+                    type="button"
+                    className="nav-portal-btn active-workspace-btn w-full"
+                    onClick={() => {
+                      setMobileNavOpen(false);
+                      setMessage("");
+                      setPage("dashboard");
+                    }}
+                  >
+                    Go to {user.role === "clinician" ? "Clinician" : user.role === "admin" ? "Admin" : "User"} Workspace &rarr;
+                  </button>
+                )}
                 <button
                   type="button"
                   className="nav-portal-btn patient w-full"
@@ -3335,13 +3360,33 @@ function App() {
   return (
     <div className="app-layout">
       <aside className="sidebar">
-        <div className="brand">
+        <div
+          className="brand clickable-brand"
+          onClick={() => {
+            setMessage("");
+            setPage("landing");
+          }}
+          title="Return to Main Dashboard"
+        >
           <img src="/dermai-icon.svg" alt="DermAI Logo" className="brand-logo-img" />
           <div className="brand-text-col">
             <span className="brand-title">DermAI</span>
             <span className="brand-sub">Clinical Intelligence</span>
           </div>
         </div>
+
+        <button
+          type="button"
+          className="sidebar-return-btn"
+          onClick={() => {
+            setMessage("");
+            setPage("landing");
+          }}
+          title="Return to Main Dashboard"
+        >
+          <ArrowLeft size={14} />
+          <span>Main Home Dashboard</span>
+        </button>
 
         <p className="nav-heading">
           {user?.role?.toUpperCase()} WORKSPACE
@@ -3379,7 +3424,20 @@ function App() {
 
       <main className="dashboard">
         <header className="topbar">
-          <div>
+          <div className="topbar-left-col">
+            <button
+              type="button"
+              className="dashboard-return-btn"
+              onClick={() => {
+                setMessage("");
+                setPage("landing");
+              }}
+              title="Return to Main Dashboard"
+              aria-label="Return to Main Dashboard"
+            >
+              <ArrowLeft size={15} />
+              <span>Return to Main Dashboard</span>
+            </button>
             <p className="eyebrow">DERMAI CLINICAL WORKSPACE • {user?.role?.toUpperCase()}</p>
             <h2>{activePage}</h2>
           </div>
