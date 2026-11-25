@@ -3243,7 +3243,9 @@ function App() {
     return (
       <main className="login-page">
         <section className="login-card patient-card">
-          <div className="logo">D</div>
+          <div className="patient-form-logo-wrap">
+            <img src="/dermai-icon.svg" alt="DermAI Logo" className="patient-form-logo" />
+          </div>
           <h1>{patientEditing ? "Update Medical Profile" : "Complete Patient Profile"}</h1>
           <p className="subtitle">
             Update your age, gender, and medical information.
@@ -3372,8 +3374,13 @@ function App() {
         ))}
 
         <div className="sidebar-bottom">
-          <p>{user?.name}</p>
-          <p>{user?.role}</p>
+          <div className="sidebar-user-badge">
+            <img src="/dermai-icon.svg" alt="DermAI" className="sidebar-user-avatar" />
+            <div className="sidebar-user-info">
+              <p className="sidebar-user-name">{user?.name}</p>
+              <span className="sidebar-user-role">{user?.role}</span>
+            </div>
+          </div>
 
           <button
             className="logout-button"
@@ -3503,7 +3510,7 @@ function App() {
               aria-label="Open profile"
               title="Open Profile"
             >
-              {user?.name?.charAt(0).toUpperCase() || "D"}
+              <img src="/dermai-icon.svg" alt="DermAI Profile" className="user-avatar-logo" />
             </button>
           </div>
         </header>
@@ -6044,7 +6051,7 @@ function App() {
               <div className="patient-profile-details">
                 <div className="profile-header-card">
                   <div className="profile-avatar-large">
-                    {user?.name?.charAt(0).toUpperCase() || "P"}
+                    <img src="/dermai-icon.svg" alt="DermAI Profile" className="profile-large-logo" />
                   </div>
                   <div>
                     <h4 style={{ margin: "0 0 4px 0", fontSize: "1.3rem", color: "#0b554d" }}>{user?.name || "Patient"}</h4>
@@ -6078,7 +6085,7 @@ function App() {
             {(user?.role === "clinician" || user?.role === "admin") && (
               <div className="clinician-profile-card">
                 <div className="profile-avatar-large">
-                  {user?.name?.charAt(0).toUpperCase() || "C"}
+                  <img src="/dermai-icon.svg" alt="DermAI Profile" className="profile-large-logo" />
                 </div>
                 <div>
                   <h4 style={{ margin: "0 0 6px 0", fontSize: "1.3rem", color: "#0b554d" }}>{user.name}</h4>

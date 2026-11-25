@@ -6334,3 +6334,104 @@ button:disabled {
   box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.08);
   border-color: #cbd5e1;
 }
+
+/* ---------- User & Profile DermAI Logo Avatars ---------- */
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1.5px solid #e2ece9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.user-avatar:hover {
+  border-color: var(--derm-primary);
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(8, 127, 115, 0.18);
+}
+
+.user-avatar-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.profile-avatar-large {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: #f0fdfa;
+  border: 2px solid #bbf7d0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(11, 85, 77, 0.08);
+  flex-shrink: 0;
+}
+
+.profile-large-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.patient-form-logo-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.patient-form-logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
+.sidebar-user-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.sidebar-user-avatar {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.sidebar-user-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-user-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--derm-navy);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-role {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--derm-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
