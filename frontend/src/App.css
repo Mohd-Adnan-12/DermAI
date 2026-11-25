@@ -6224,47 +6224,52 @@ button:disabled {
   }
 }
 
-/* ---------- Workspace Return Navigation ---------- */
-.topbar-left-col {
+/* ---------- Workspace Return Navigation & Header ---------- */
+.topbar-left-group {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.dashboard-return-btn {
+.topbar-return-btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  background: #f1f5f9;
+  gap: 8px;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
-  color: #475569;
-  font-size: 12px;
+  color: #334155;
+  font-size: 13px;
   font-weight: 600;
-  padding: 6px 12px;
+  padding: 8px 16px;
   border-radius: 9999px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  margin-bottom: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.dashboard-return-btn:hover {
-  background: #ffffff;
+.topbar-return-btn:hover {
+  background: #f8fafc;
   color: var(--derm-navy);
   border-color: #cbd5e1;
   transform: translateX(-2px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
 }
 
-.dashboard-return-btn svg {
+.topbar-return-btn svg {
   flex-shrink: 0;
   color: var(--derm-primary);
   transition: transform 0.2s ease;
 }
 
-.dashboard-return-btn:hover svg {
+.topbar-return-btn:hover svg {
   transform: translateX(-2px);
+}
+
+.topbar-divider {
+  width: 1px;
+  height: 32px;
+  background: #e2e8f0;
 }
 
 .clickable-brand {
@@ -6276,48 +6281,56 @@ button:disabled {
   opacity: 0.85;
 }
 
-.sidebar-return-btn {
+/* ---------- Enhanced Clinician & User Dashboard Styles ---------- */
+.dashboard-hero-banner.clinician-banner {
+  background: radial-gradient(circle at 90% 15%, rgba(14, 165, 233, 0.18), transparent 50%),
+              radial-gradient(circle at 10% 85%, rgba(16, 185, 129, 0.12), transparent 40%),
+              linear-gradient(135deg, #022624 0%, #064e3b 45%, #0369a1 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.dashboard-hero-banner.clinician-banner .btn-hero-primary {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.dashboard-hero-banner.clinician-banner .btn-hero-primary:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+}
+
+.icon-red {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: #f8fafc;
-  border: 1px solid #e2ece9;
-  color: #475569;
-  font-size: 12.5px;
-  font-weight: 600;
-  padding: 9px 12px;
-  border-radius: 9px;
-  cursor: pointer;
-  margin: 12px 0 16px 0;
-  transition: all 0.2s ease;
-  width: 100%;
-}
-
-.sidebar-return-btn:hover {
-  background: #e7f5f2;
-  color: var(--derm-navy);
-  border-color: #cbd5e1;
-  transform: translateX(-2px);
-}
-
-.sidebar-return-btn svg {
-  flex-shrink: 0;
-  color: var(--derm-primary);
-  transition: transform 0.2s ease;
-}
-
-.sidebar-return-btn:hover svg {
-  transform: translateX(-2px);
-}
-
-.nav-portal-btn.active-workspace-btn {
-  background: var(--derm-primary);
-  color: #ffffff;
-  border-color: var(--derm-primary);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11.5px;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
-.nav-portal-btn.active-workspace-btn:hover {
-  background: #087f73;
-  color: #ffffff;
+.status-pill.status-pending {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.status-pill.status-reviewed {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.enhanced-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
 }

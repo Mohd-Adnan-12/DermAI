@@ -1792,18 +1792,6 @@ function App() {
             </nav>
 
             <div className="landing-nav-actions">
-              {user && (
-                <button
-                  type="button"
-                  className="nav-portal-btn active-workspace-btn"
-                  onClick={() => {
-                    setMessage("");
-                    setPage("dashboard");
-                  }}
-                >
-                  Go to {user.role === "clinician" ? "Clinician" : user.role === "admin" ? "Admin" : "User"} Workspace &rarr;
-                </button>
-              )}
               <button
                 type="button"
                 className="nav-portal-btn patient"
@@ -1855,19 +1843,6 @@ function App() {
               <a href="#how-it-works" onClick={() => setMobileNavOpen(false)}>How It Works</a>
               <a href="#performance" onClick={() => setMobileNavOpen(false)}>Performance</a>
               <div className="mobile-drawer-portals">
-                {user && (
-                  <button
-                    type="button"
-                    className="nav-portal-btn active-workspace-btn w-full"
-                    onClick={() => {
-                      setMobileNavOpen(false);
-                      setMessage("");
-                      setPage("dashboard");
-                    }}
-                  >
-                    Go to {user.role === "clinician" ? "Clinician" : user.role === "admin" ? "Admin" : "User"} Workspace &rarr;
-                  </button>
-                )}
                 <button
                   type="button"
                   className="nav-portal-btn patient w-full"
@@ -3375,19 +3350,6 @@ function App() {
           </div>
         </div>
 
-        <button
-          type="button"
-          className="sidebar-return-btn"
-          onClick={() => {
-            setMessage("");
-            setPage("landing");
-          }}
-          title="Return to Main Dashboard"
-        >
-          <ArrowLeft size={14} />
-          <span>Main Home Dashboard</span>
-        </button>
-
         <p className="nav-heading">
           {user?.role?.toUpperCase()} WORKSPACE
         </p>
@@ -3424,22 +3386,25 @@ function App() {
 
       <main className="dashboard">
         <header className="topbar">
-          <div className="topbar-left-col">
+          <div className="topbar-left-group">
             <button
               type="button"
-              className="dashboard-return-btn"
+              className="topbar-return-btn"
               onClick={() => {
                 setMessage("");
                 setPage("landing");
               }}
-              title="Return to Main Dashboard"
-              aria-label="Return to Main Dashboard"
+              title="Return to Dashboard"
+              aria-label="Return to Dashboard"
             >
-              <ArrowLeft size={15} />
-              <span>Return to Main Dashboard</span>
+              <ArrowLeft size={16} />
+              <span>Return to Dashboard</span>
             </button>
-            <p className="eyebrow">DERMAI CLINICAL WORKSPACE • {user?.role?.toUpperCase()}</p>
-            <h2>{activePage}</h2>
+            <div className="topbar-divider" />
+            <div>
+              <p className="eyebrow">DERMAI CLINICAL WORKSPACE • {user?.role?.toUpperCase()}</p>
+              <h2>{activePage}</h2>
+            </div>
           </div>
 
           <div className="topbar-right-controls">
@@ -3768,70 +3733,253 @@ function App() {
 
         {/* CLINICIAN DASHBOARD */}
 
-        {activePage === "Dashboard" &&
-          user?.role === "clinician" && (
-            <>
-              <section className="welcome-banner">
-                <div>
-                  <p className="eyebrow">CLINICIAN WORKSPACE</p>
-                  <h1>Welcome, {user.name}</h1>
-
-                  <p>
-                    Review patient cases and monitor prediction
-                    results.
-                  </p>
+        {activePage === "Dashboard" && user?.role === "clinician" && (
+          <div className="modern-dashboard-layout">
+            {/* 1. Clinical Reviewer Hero Banner */}
+            <section className="dashboard-hero-banner clinician-banner">
+              <div className="hero-content">
+                <div className="hero-status-pill">
+                  <span className="live-pulse"></span>
+                  <span>Accredited Clinical Decision Support Console • Multimodal Active</span>
                 </div>
+                <h1>Welcome, Dr. {user.name} 🩺</h1>
+                <p className="hero-description">
+                  Diagnostic triage workspace for reviewing patient lesion submissions, inspecting Grad-CAM attention saliency maps, and issuing verified clinical reports.
+                </p>
+                <div className="hero-actions">
+                  <button
+                    className="btn-hero-primary"
+                    onClick={() => {
+                      setClinicianCaseFilter("pending");
+                      setActivePage("Total Cases");
+                    }}
+                  >
+                    📋 Review Triage Queue ({dashboardData?.pending_reviews ?? 0} Pending)
+                  </button>
+                  <button
+                    className="btn-hero-secondary"
+                    onClick={() => {
+                      setClinicianCaseFilter("high_risk");
+                      setActivePage("Total Cases");
+                    }}
+                  >
+                    🚨 High-Risk Cases ({dashboardData?.high_risk_cases ?? 0})
+                  </button>
+                  <button
+                    className="btn-hero-tertiary"
+                    onClick={() => setActivePage("ML Analytics")}
+                  >
+                    📊 Model Telemetry & Benchmarks →
+                  </button>
+                </div>
+              </div>
 
-                <div className="banner-symbol">D</div>
-              </section>
+              <div className="hero-metrics-pill">
+                <div className="metric-row">
+                  <span className="metric-label">Model Architecture</span>
+                  <strong className="metric-val">Multimodal CNN + 64-dim MLP</strong>
+                </div>
+                <div className="metric-row">
+                  <span className="metric-label">Held-Out Benchmark</span>
+                  <strong className="metric-val">PAD-UFES-20 (2,298 Cases)</strong>
+                </div>
+                <div className="metric-row">
+                  <span className="metric-label">Diagnostic Agreement</span>
+                  <strong className="metric-val highlight-green">76.74% Accuracy</strong>
+                </div>
+                <div className="metric-row">
+                  <span className="metric-label">Explainability</span>
+                  <strong className="metric-val">Grad-CAM Class Activation</strong>
+                </div>
+              </div>
+            </section>
 
-              <h3>Clinical Overview</h3>
+            {/* 2. Clinical KPI Metrics Grid */}
+            <div className="section-header-row">
+              <h3>Clinical Overview & Triage Metrics</h3>
+              <span className="section-subtitle">Real-time status of diagnostic evaluations across your network</span>
+            </div>
 
-              <section className="stats-grid">
-                <article
-                  className="stat-card"
-                  style={{ cursor: "pointer" }}
+            <section className="stats-grid-enhanced">
+              <article
+                className="enhanced-stat-card"
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  setClinicianCaseFilter("all");
+                  setActivePage("Total Cases");
+                }}
+              >
+                <div className="stat-icon-wrap icon-blue">🔬</div>
+                <div>
+                  <span className="stat-label">Total Screenings</span>
+                  <h2 className="stat-number">{dashboardData?.total_cases ?? 0}</h2>
+                  <p className="stat-sub">Recorded clinical cases →</p>
+                </div>
+              </article>
+
+              <article
+                className="enhanced-stat-card"
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  setClinicianCaseFilter("pending");
+                  setActivePage("Total Cases");
+                }}
+              >
+                <div className="stat-icon-wrap icon-amber">⏳</div>
+                <div>
+                  <span className="stat-label">Pending Reviews</span>
+                  <h2 className="stat-number" style={{ color: (dashboardData?.pending_reviews || 0) > 0 ? "#d97706" : "inherit" }}>
+                    {dashboardData?.pending_reviews ?? 0}
+                  </h2>
+                  <p className="stat-sub">Awaiting specialist review →</p>
+                </div>
+              </article>
+
+              <article
+                className="enhanced-stat-card"
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  setClinicianCaseFilter("high_risk");
+                  setActivePage("Total Cases");
+                }}
+              >
+                <div className="stat-icon-wrap icon-red">🚨</div>
+                <div>
+                  <span className="stat-label">High Malignancy Risk</span>
+                  <h2 className="stat-number" style={{ color: (dashboardData?.high_risk_cases || 0) > 0 ? "#dc2626" : "inherit" }}>
+                    {dashboardData?.high_risk_cases ?? 0}
+                  </h2>
+                  <p className="stat-sub">Require urgent clinical triage →</p>
+                </div>
+              </article>
+
+              <article
+                className="enhanced-stat-card"
+                style={{ cursor: "pointer" }}
+                onClick={() => setActivePage("ML Analytics")}
+              >
+                <div className="stat-icon-wrap icon-teal">🎯</div>
+                <div>
+                  <span className="stat-label">AI Diagnostic Scope</span>
+                  <h2 className="stat-number">6 Conditions</h2>
+                  <p className="stat-sub">View confusion matrix & ROC →</p>
+                </div>
+              </article>
+            </section>
+
+            {/* 3. Triage Cases Queue Table */}
+            <section className="recent-cases-section">
+              <div className="recent-cases-header">
+                <div>
+                  <h4>Prioritized Clinical Triage Queue</h4>
+                  <p>Recent mobile lesion cases submitted for specialist evaluation</p>
+                </div>
+                <button
+                  className="btn-view-all"
                   onClick={() => {
                     setClinicianCaseFilter("all");
                     setActivePage("Total Cases");
                   }}
                 >
-                  <span>Total Cases</span>
-                  <h2>{dashboardData?.total_cases ?? 0}</h2>
-                  <p>Recorded clinical cases →</p>
-                </article>
+                  View All Cases ({dashboardData?.total_cases ?? 0}) →
+                </button>
+              </div>
 
-                <article
-                  className="stat-card"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => {
-                    setClinicianCaseFilter("pending");
-                    setActivePage("Total Cases");
-                  }}
-                >
-                  <span>Cases Requiring Review</span>
-                  <h2 style={{ color: (dashboardData?.pending_reviews || 0) > 0 ? "#d97706" : "inherit" }}>
-                    {dashboardData?.pending_reviews ?? 0}
-                  </h2>
-                  <p>Pending clinician review →</p>
-                </article>
-
-                <article
-                  className="stat-card"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => {
-                    setActivePage("Total Cases");
-                  }}
-                >
-                  <span>High Risk Cases</span>
-                  <h2 style={{ color: (dashboardData?.high_risk_cases || 0) > 0 ? "#dc2626" : "inherit" }}>
-                    {dashboardData?.high_risk_cases ?? 0}
-                  </h2>
-                  <p>Require urgent attention →</p>
-                </article>
-              </section>
-            </>
-          )}
+              {(dashboardData?.cases || []).length === 0 ? (
+                <div className="empty-cases-card">
+                  <div className="empty-icon">🩺</div>
+                  <h5>No clinical cases in queue</h5>
+                  <p>When patients submit lesion photographs for assessment, cases will appear here for clinical review and verification.</p>
+                </div>
+              ) : (
+                <div className="dashboard-cases-table-wrap">
+                  <table className="dashboard-cases-table">
+                    <thead>
+                      <tr>
+                        <th>Case ID</th>
+                        <th>Patient Info</th>
+                        <th>Submission Time</th>
+                        <th>Affected Region</th>
+                        <th>AI Finding</th>
+                        <th>Confidence</th>
+                        <th>Risk Level</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(dashboardData.cases.slice(0, 5)).map((c) => (
+                        <tr key={c.case_id}>
+                          <td>
+                            <div className="case-id-cell">
+                              {c.image_url ? (
+                                <img src={c.image_url} alt="" className="table-thumb" />
+                              ) : (
+                                <span className="table-thumb-placeholder">🔬</span>
+                              )}
+                              <strong>#{c.case_id}</strong>
+                            </div>
+                          </td>
+                          <td>
+                            <strong>{c.patient_name || "Patient"}</strong>
+                            <div style={{ fontSize: "12px", color: "#64748b" }}>
+                              {c.age ? `Age ${c.age}` : ""} {c.gender ? `(${c.gender})` : ""}
+                            </div>
+                          </td>
+                          <td>{c.created_at || "—"}</td>
+                          <td>
+                            <span className="body-part-pill">{c.affected_body_part || "Not specified"}</span>
+                          </td>
+                          <td>
+                            <strong>{c.disease_name || c.predicted_class || "Processing"}</strong>
+                          </td>
+                          <td>
+                            {c.confidence != null ? (
+                              <div className="table-conf-bar">
+                                <div className="bar-track">
+                                  <div
+                                    className="bar-fill"
+                                    style={{ width: `${Math.min(c.confidence, 100)}%` }}
+                                  ></div>
+                                </div>
+                                <span>{c.confidence}%</span>
+                              </div>
+                            ) : "—"}
+                          </td>
+                          <td>
+                            {c.risk_level && (
+                              <span className={`risk-badge risk-${c.risk_level.toLowerCase().replace(/\s+/g, "-")}`}>
+                                {c.risk_level}
+                              </span>
+                            )}
+                          </td>
+                          <td>
+                            <span className={`status-pill status-${c.status || "pending"}`}>
+                              {c.status === "reviewed" ? "✓ Verified" : "⏳ Pending"}
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              className="btn-table-action"
+                              onClick={() => {
+                                setSelectedCase(c);
+                                setActivePage("Total Cases");
+                              }}
+                              title="Review Case"
+                            >
+                              Inspect →
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          </div>
+        )}
 
         {/* ADMIN DASHBOARD */}
 
