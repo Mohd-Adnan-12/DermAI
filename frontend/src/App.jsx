@@ -66,7 +66,7 @@ const CNN_MODEL_COMPARISON = [
     badge: "Selected Production Model",
     color: "#148074",
     architecture: "Compound scaling with inverted residual MBConv blocks + Squeeze-and-Excitation. Fused with 64 clinical metadata features (320 total).",
-    pros: "Highest Macro F1 (71.86%) & Macro Recall (70.47%), fastest inference (34.09 ms), compact footprint, and best sensitivity on malignant minority classes (MEL, SCC)."
+    pros: "Highest Macro F1 (71.86%) & Macro Recall (70.47%), real-time inference speed, compact footprint, and best sensitivity on malignant minority classes (MEL, SCC)."
   },
   {
     id: "resnet",
@@ -619,7 +619,7 @@ function App() {
         architecture: "EfficientNet-B0 + 64-dim Clinical Metadata Fusion",
         benchmark_accuracy: "76.74%",
         macro_f1: "71.86%",
-        inference_latency: "34.09 ms",
+        inference_latency: "Real-time",
       },
       medical_disclaimer:
         "DermAI provides preliminary AI-assisted clinical decision-support only. This output does not replace professional dermatological examination.",
@@ -2011,8 +2011,8 @@ function App() {
                     <strong className="hud-val">EfficientNet-B0</strong>
                   </div>
                   <div className="hud-metric">
-                    <span className="hud-label">Inference Time</span>
-                    <strong className="hud-val">34.09 ms</strong>
+                    <span className="hud-label">Processing</span>
+                    <strong className="hud-val">Real-Time</strong>
                   </div>
                   <div className="hud-metric">
                     <span className="hud-label">Attention Layer</span>
@@ -2303,7 +2303,7 @@ function App() {
                 <h4>Production Architecture: EfficientNet-B0 Multimodal Model</h4>
               </div>
               <p>
-                Selected for production due to its superior sensitivity on malignant categories (<strong>70.47% Macro Recall</strong>, <strong>97.69% Melanoma ROC-AUC</strong>) and fast <strong>34.09 ms inference latency</strong>, ensuring rapid preliminary triage.
+                Selected for production due to its superior sensitivity on malignant categories (<strong>70.47% Macro Recall</strong>, <strong>97.69% Melanoma ROC-AUC</strong>), ensuring rapid and reliable preliminary triage.
               </p>
             </div>
           </div>
@@ -5399,8 +5399,8 @@ function App() {
                     <span className="decision-card-icon">⚡</span>
                     <h5>3. Edge & Mobile Feasibility</h5>
                     <p>
-                      EfficientNet-B0 delivers the lowest inference latency (<strong>34.09 ms/image</strong>) and a compact <strong>~5.3M parameter</strong> footprint,
-                      enabling smooth real-time execution on mobile devices with native Grad-CAM explainability.
+                      EfficientNet-B0 delivers fast real-time inference and a compact <strong>~5.3M parameter</strong> footprint,
+                      enabling smooth execution on mobile devices with native Grad-CAM explainability.
                     </p>
                   </div>
                 </div>
