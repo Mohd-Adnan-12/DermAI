@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
+  ArrowLeft,
   Lock,
   UploadCloud,
   Camera,
@@ -2391,7 +2392,7 @@ function App() {
           "Encrypted medical history and clinical tracking"
         ],
         registerPrompt: "Don't have a patient account?",
-        registerAction: "Register as Patient &rarr;",
+        registerAction: "Register as Patient",
         onRegister: () => {
           setMessage("");
           setPage("register_patient");
@@ -2408,7 +2409,7 @@ function App() {
           "One-click clinical report verification and email alert dispatch"
         ],
         registerPrompt: "New medical clinician?",
-        registerAction: "Register for Staff Credentialing &rarr;",
+        registerAction: "Register for Staff Credentialing",
         onRegister: () => {
           setMessage("");
           setPage("register_clinician");
@@ -2466,6 +2467,19 @@ function App() {
           {/* Right Form Column */}
           <section className="login-form-col">
             <div className="login-form-card">
+              <button
+                type="button"
+                className="card-back-arrow-btn"
+                onClick={() => {
+                  setMessage("");
+                  setPage("landing");
+                }}
+                aria-label="Back to Dashboard"
+              >
+                <ArrowLeft size={16} />
+                <span>Back to Dashboard</span>
+              </button>
+
               <div className="form-card-header">
                 <div className="form-brand-row">
                   <img src="/dermai-icon.svg" alt="DermAI" className="form-logo-svg" />
@@ -2554,65 +2568,16 @@ function App() {
                 </div>
               )}
 
-              <div className="form-card-footer">
-                {portalConfig.registerPrompt && (
+              {portalConfig.registerPrompt && (
+                <div className="form-card-footer">
                   <div className="auth-switch-box">
                     <span>{portalConfig.registerPrompt}</span>{" "}
                     <button type="button" className="link-highlight" onClick={portalConfig.onRegister}>
                       {portalConfig.registerAction}
                     </button>
                   </div>
-                )}
-
-                <div className="switch-portal-actions">
-                  {portalRole !== "patient" && (
-                    <button
-                      type="button"
-                      className="btn-subtle-switch"
-                      onClick={() => {
-                        setMessage("");
-                        setPage("login_patient");
-                      }}
-                    >
-                      Patient Login
-                    </button>
-                  )}
-                  {portalRole !== "clinician" && (
-                    <button
-                      type="button"
-                      className="btn-subtle-switch"
-                      onClick={() => {
-                        setMessage("");
-                        setPage("login_clinician");
-                      }}
-                    >
-                      Clinician Login
-                    </button>
-                  )}
-                  {portalRole !== "admin" && (
-                    <button
-                      type="button"
-                      className="btn-subtle-switch"
-                      onClick={() => {
-                        setMessage("");
-                        setPage("login_admin");
-                      }}
-                    >
-                      Admin Login
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="btn-subtle-switch"
-                    onClick={() => {
-                      setMessage("");
-                      setPage("landing");
-                    }}
-                  >
-                    Home &rarr;
-                  </button>
                 </div>
-              </div>
+              )}
             </div>
           </section>
         </div>
@@ -2680,6 +2645,19 @@ function App() {
 
           <section className="register-form-side">
             <div className="register-card">
+              <button
+                type="button"
+                className="card-back-arrow-btn"
+                onClick={() => {
+                  setMessage("");
+                  setPage("login_patient");
+                }}
+                aria-label="Back to Patient Login"
+              >
+                <ArrowLeft size={16} />
+                <span>Back to Sign In</span>
+              </button>
+
               <div className="form-card-header">
                 <div className="form-brand-row">
                   <img src="/dermai-icon.svg" alt="DermAI" className="form-logo-svg" />
@@ -2857,16 +2835,6 @@ function App() {
                     Sign In &rarr;
                   </button>
                 </p>
-                <button
-                  type="button"
-                  className="btn-subtle-switch"
-                  onClick={() => {
-                    setMessage("");
-                    setPage("landing");
-                  }}
-                >
-                  &larr; Return to Home
-                </button>
               </div>
             </div>
           </section>
@@ -2935,6 +2903,19 @@ function App() {
 
           <section className="register-form-side">
             <div className="register-card">
+              <button
+                type="button"
+                className="card-back-arrow-btn"
+                onClick={() => {
+                  setMessage("");
+                  setPage("login_clinician");
+                }}
+                aria-label="Back to Clinician Login"
+              >
+                <ArrowLeft size={16} />
+                <span>Back to Sign In</span>
+              </button>
+
               <div className="form-card-header">
                 <div className="form-brand-row">
                   <img src="/dermai-icon.svg" alt="DermAI" className="form-logo-svg" />
@@ -3051,16 +3032,6 @@ function App() {
                     Sign In &rarr;
                   </button>
                 </p>
-                <button
-                  type="button"
-                  className="btn-subtle-switch"
-                  onClick={() => {
-                    setMessage("");
-                    setPage("landing");
-                  }}
-                >
-                  &larr; Return to Home
-                </button>
               </div>
             </div>
           </section>
@@ -3076,6 +3047,21 @@ function App() {
       <main className="dedicated-login-page">
         <div className="login-split-container single-center">
           <div className="login-form-card center-card">
+            <button
+              type="button"
+              className="card-back-arrow-btn"
+              onClick={() => {
+                setMessage("");
+                setOtpError("");
+                setOtpMessage("");
+                setPage("login_patient");
+              }}
+              aria-label="Back to Patient Login"
+            >
+              <ArrowLeft size={16} />
+              <span>Back to Login</span>
+            </button>
+
             <div className="form-card-header">
               <div className="form-brand-row">
                 <img src="/dermai-icon.svg" alt="DermAI" className="form-logo-svg" />
@@ -3242,17 +3228,7 @@ function App() {
                   setPage("login_patient");
                 }}
               >
-                &larr; Back to Patient Login
-              </button>
-              <button
-                type="button"
-                className="btn-subtle-switch"
-                onClick={() => {
-                  setMessage("");
-                  setPage("landing");
-                }}
-              >
-                Return to Home &rarr;
+                &larr; Return to Login
               </button>
             </div>
           </div>
