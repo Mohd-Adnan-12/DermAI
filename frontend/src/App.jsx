@@ -1794,36 +1794,6 @@ function App() {
             <div className="landing-nav-actions">
               <button
                 type="button"
-                className="nav-portal-btn patient"
-                onClick={() => {
-                  setMessage("");
-                  setPage("login_patient");
-                }}
-              >
-                Patient Login
-              </button>
-              <button
-                type="button"
-                className="nav-portal-btn clinician"
-                onClick={() => {
-                  setMessage("");
-                  setPage("login_clinician");
-                }}
-              >
-                Clinician Login
-              </button>
-              <button
-                type="button"
-                className="nav-portal-btn admin"
-                onClick={() => {
-                  setMessage("");
-                  setPage("login_admin");
-                }}
-              >
-                Admin Login
-              </button>
-              <button
-                type="button"
                 className="mobile-nav-toggle"
                 onClick={() => setMobileNavOpen(!mobileNavOpen)}
                 aria-label="Toggle navigation"
@@ -1842,41 +1812,6 @@ function App() {
               <a href="#diseases" onClick={() => setMobileNavOpen(false)}>Diseases</a>
               <a href="#how-it-works" onClick={() => setMobileNavOpen(false)}>How It Works</a>
               <a href="#performance" onClick={() => setMobileNavOpen(false)}>Performance</a>
-              <div className="mobile-drawer-portals">
-                <button
-                  type="button"
-                  className="nav-portal-btn patient w-full"
-                  onClick={() => {
-                    setMobileNavOpen(false);
-                    setMessage("");
-                    setPage("login_patient");
-                  }}
-                >
-                  Patient Login
-                </button>
-                <button
-                  type="button"
-                  className="nav-portal-btn clinician w-full"
-                  onClick={() => {
-                    setMobileNavOpen(false);
-                    setMessage("");
-                    setPage("login_clinician");
-                  }}
-                >
-                  Clinician Login
-                </button>
-                <button
-                  type="button"
-                  className="nav-portal-btn admin w-full"
-                  onClick={() => {
-                    setMobileNavOpen(false);
-                    setMessage("");
-                    setPage("login_admin");
-                  }}
-                >
-                  Admin Login
-                </button>
-              </div>
             </div>
           )}
         </header>
@@ -1901,37 +1836,118 @@ function App() {
                 An AI-powered skin image analysis platform designed to assist preliminary skin disease screening through deep learning and explainable AI.
               </p>
 
-              <div className="hero-cta-group">
-                <button
-                  type="button"
-                  className="btn-hero-solid"
-                  onClick={() => {
-                    setMessage("");
-                    setPage("login_patient");
-                  }}
-                >
-                  Patient Portal <ArrowRight size={18} />
-                </button>
-                <button
-                  type="button"
-                  className="btn-hero-solid clinician-btn"
-                  onClick={() => {
-                    setMessage("");
-                    setPage("login_clinician");
-                  }}
-                >
-                  Clinician Portal <ArrowRight size={18} />
-                </button>
-                <button
-                  type="button"
-                  className="btn-hero-outline"
-                  onClick={() => {
-                    const el = document.getElementById("about");
-                    if (el) el.scrollIntoView({ behavior: "smooth" });
-                  }}
-                >
-                  Explore DermAI <ChevronDown size={18} />
-                </button>
+              {/* Dual-Card Interactive Portal Gateway (Idea 2) */}
+              <div className="hero-portal-gateway">
+                <div className="gateway-heading-row">
+                  <span className="gateway-eyebrow">CHOOSE YOUR WORKSPACE</span>
+                  <div className="gateway-live-indicator">
+                    <span className="live-dot-pulse"></span>
+                    <span>AI Inference Ready</span>
+                  </div>
+                </div>
+
+                <div className="gateway-cards-grid">
+                  {/* Card 1: Patient Gateway */}
+                  <div
+                    className="gateway-card patient-gateway"
+                    onClick={() => {
+                      setMessage("");
+                      setPage("login_patient");
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        setMessage("");
+                        setPage("login_patient");
+                      }
+                    }}
+                  >
+                    <div className="gateway-card-top">
+                      <div className="gateway-icon-badge patient">
+                        <UserCheck size={22} />
+                      </div>
+                      <span className="gateway-role-pill patient">Patient Care</span>
+                    </div>
+
+                    <div className="gateway-card-body">
+                      <h4>Patient Screening</h4>
+                      <p>
+                        Upload mobile skin photos for multimodal deep learning assessment, automated blur & lighting validation, and explainable Grad-CAM heatmaps.
+                      </p>
+                    </div>
+
+                    <div className="gateway-card-footer">
+                      <span className="gateway-action-text patient">
+                        Launch Patient Portal <ArrowRight size={16} />
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Clinician Gateway */}
+                  <div
+                    className="gateway-card clinician-gateway"
+                    onClick={() => {
+                      setMessage("");
+                      setPage("login_clinician");
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        setMessage("");
+                        setPage("login_clinician");
+                      }
+                    }}
+                  >
+                    <div className="gateway-card-top">
+                      <div className="gateway-icon-badge clinician">
+                        <Stethoscope size={22} />
+                      </div>
+                      <span className="gateway-role-pill clinician">Clinical Suite</span>
+                    </div>
+
+                    <div className="gateway-card-body">
+                      <h4>Doctor & Clinician</h4>
+                      <p>
+                        Accredited dermatologist workspace featuring prioritized triage queues, dual-view heatmaps, PAD-UFES-20 benchmarks, and signed PDF verification.
+                      </p>
+                    </div>
+
+                    <div className="gateway-card-footer">
+                      <span className="gateway-action-text clinician">
+                        Access Clinician Suite <ArrowRight size={16} />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Subtle Utility Links */}
+                <div className="gateway-sub-row">
+                  <button
+                    type="button"
+                    className="admin-link-subtle"
+                    onClick={() => {
+                      setMessage("");
+                      setPage("login_admin");
+                    }}
+                  >
+                    <Shield size={14} />
+                    <span>Administrator Console →</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="explore-link-subtle"
+                    onClick={() => {
+                      const el = document.getElementById("about");
+                      if (el) el.scrollIntoView({ behavior: "smooth" });
+                    }}
+                  >
+                    <span>Explore Project Story & Architecture</span>
+                    <ChevronDown size={14} />
+                  </button>
+                </div>
               </div>
 
               {/* Trust & Performance Highlights */}
