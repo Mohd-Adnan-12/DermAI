@@ -1794,6 +1794,20 @@ function App() {
             <div className="landing-nav-actions">
               <button
                 type="button"
+                className="nav-admin-minimal-btn"
+                onClick={() => {
+                  setMessage("");
+                  setPage("login_admin");
+                }}
+                title="Administrator Console"
+                aria-label="Administrator Console"
+              >
+                <Lock size={13} />
+                <span>Admin</span>
+              </button>
+
+              <button
+                type="button"
                 className="mobile-nav-toggle"
                 onClick={() => setMobileNavOpen(!mobileNavOpen)}
                 aria-label="Toggle navigation"
@@ -1812,6 +1826,18 @@ function App() {
               <a href="#diseases" onClick={() => setMobileNavOpen(false)}>Diseases</a>
               <a href="#how-it-works" onClick={() => setMobileNavOpen(false)}>How It Works</a>
               <a href="#performance" onClick={() => setMobileNavOpen(false)}>Performance</a>
+              <button
+                type="button"
+                className="mobile-drawer-admin-btn"
+                onClick={() => {
+                  setMobileNavOpen(false);
+                  setMessage("");
+                  setPage("login_admin");
+                }}
+              >
+                <Lock size={13} />
+                <span>Administrator Console</span>
+              </button>
             </div>
           )}
         </header>
