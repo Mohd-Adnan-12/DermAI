@@ -49,6 +49,52 @@ const DISEASE_NAMES_MAP = {
   SEK: "Seborrheic Keratosis",
 };
 
+// 5-second live rotation for hero inference engine scanner
+const HERO_SCANNER_CYCLE = [
+  {
+    code: "BCC",
+    name: "Basal Cell Carcinoma (BCC)",
+    riskText: "High Risk • Malignant",
+    riskBadgeClass: "red",
+    accuracy: "98.07%",
+  },
+  {
+    code: "MEL",
+    name: "Melanoma (MEL)",
+    riskText: "Critical • High Risk",
+    riskBadgeClass: "red",
+    accuracy: "98.07%",
+  },
+  {
+    code: "SCC",
+    name: "Squamous Cell Carcinoma (SCC)",
+    riskText: "High Risk • Malignant",
+    riskBadgeClass: "red",
+    accuracy: "98.07%",
+  },
+  {
+    code: "NEV",
+    name: "Melanocytic Nevus (NEV)",
+    riskText: "Low Risk • Benign",
+    riskBadgeClass: "green",
+    accuracy: "98.07%",
+  },
+  {
+    code: "ACK",
+    name: "Actinic Keratosis (ACK)",
+    riskText: "Moderate Risk • Pre-cancerous",
+    riskBadgeClass: "amber",
+    accuracy: "98.07%",
+  },
+  {
+    code: "SEK",
+    name: "Seborrheic Keratosis (SEK)",
+    riskText: "Low Risk • Benign",
+    riskBadgeClass: "green",
+    accuracy: "98.07%",
+  },
+];
+
 const CNN_MODEL_COMPARISON = [
   {
     id: "effnet",
@@ -376,6 +422,16 @@ function App() {
   const [otpConfirmPassword, setOtpConfirmPassword] = useState("");
   const [showOtpNewPassword, setShowOtpNewPassword] = useState(false);
   const [showOtpConfirmPassword, setShowOtpConfirmPassword] = useState(false);
+
+  // Live 5-second rotation state for hero scanner mockup (BCC -> MEL -> SCC -> NEV -> ACK -> SEK)
+  const [scannerCycleIdx, setScannerCycleIdx] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setScannerCycleIdx((prev) => (prev + 1) % HERO_SCANNER_CYCLE.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   // OTP Cooldown Timer
   useEffect(() => {
@@ -2022,13 +2078,13 @@ function App() {
                   
                   {/* Lesion Silhouette / Visual Simulation */}
                   <div className="scanner-lesion-sim">
-                    <div className="sim-lesion-body" />
+                    <div className={`sim-lesion-body sim-${HERO_SCANNER_CYCLE[scannerCycleIdx].code.toLowerCase()}`} />
                     <div className="sim-bounding-box">
                       <span className="corner top-left" />
                       <span className="corner top-right" />
                       <span className="corner bottom-left" />
                       <span className="corner bottom-right" />
-                      <span className="box-label">ROI: 99.2% Conf</span>
+                      <span className="box-label">ROI: {HERO_SCANNER_CYCLE[scannerCycleIdx].accuracy} Train Acc</span>
                     </div>
                   </div>
 
@@ -2036,10 +2092,10 @@ function App() {
                   <div className="scanner-detection-banner">
                     <div className="detect-col">
                       <span className="detect-caption">PREDICTED CLASS</span>
-                      <strong className="detect-name">Melanocytic Nevus (NEV)</strong>
+                      <strong className="detect-name">{HERO_SCANNER_CYCLE[scannerCycleIdx].name}</strong>
                     </div>
-                    <div className="detect-badge-pill green">
-                      <span>Low Risk &bull; Benign</span>
+                    <div className={`detect-badge-pill ${HERO_SCANNER_CYCLE[scannerCycleIdx].riskBadgeClass}`}>
+                      <span>{HERO_SCANNER_CYCLE[scannerCycleIdx].riskText}</span>
                     </div>
                   </div>
                 </div>
